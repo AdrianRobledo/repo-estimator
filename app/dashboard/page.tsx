@@ -296,37 +296,45 @@ export default function DashboardPage() {
     setTimeout(() => setCopiedId(null), 2000);
   }
 
-  const statusColor: Record<string, string> = {
-    sent: "bg-blue-50 text-blue-700 ring-blue-200",
-    approved: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-    declined: "bg-red-50 text-red-600 ring-red-200",
-    unpaid: "bg-amber-50 text-amber-700 ring-amber-200",
-    paid: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  const statusDot: Record<string, string> = {
+    sent: "bg-blue-400",
+    approved: "bg-emerald-400",
+    declined: "bg-rose-400",
+    unpaid: "bg-amber-400",
+    paid: "bg-emerald-400",
+  };
+
+  const statusText: Record<string, string> = {
+    sent: "text-blue-400",
+    approved: "text-emerald-400",
+    declined: "text-rose-400",
+    unpaid: "text-amber-400",
+    paid: "text-emerald-400",
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-100">
+      <div className="min-h-screen bg-[#0B0F1A]">
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-indigo-500" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-[#0B0F1A]">
       <Navbar />
 
       <div className="mx-auto max-w-2xl px-4 py-6">
         {/* Estimates Section */}
-        <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
           Estimates
         </h2>
 
         {estimates.length === 0 ? (
-          <div className="mt-3 rounded-xl bg-white p-6 text-center text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">
+          <div className="mt-3 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 text-center text-sm text-slate-500">
             No estimates yet. Create your first one!
           </div>
         ) : (
@@ -334,11 +342,11 @@ export default function DashboardPage() {
             {estimates.map((est) => (
               <div
                 key={est.id}
-                className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+                className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4 transition-all duration-200 hover:bg-white/[0.03]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800">
+                    <p className="text-sm font-semibold text-white">
                       {est.customer.name || "No customer name"}
                     </p>
                     <p className="mt-0.5 text-xs text-slate-500">
@@ -346,14 +354,13 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${
-                        statusColor[est.status] || "bg-slate-50 text-slate-600 ring-slate-200"
-                      }`}
-                    >
-                      {est.status.charAt(0).toUpperCase() + est.status.slice(1)}
+                    <span className="flex items-center gap-1.5">
+                      <span className={`h-2 w-2 rounded-full ${statusDot[est.status] || "bg-slate-500"}`} />
+                      <span className={`text-xs font-medium ${statusText[est.status] || "text-slate-400"}`}>
+                        {est.status.charAt(0).toUpperCase() + est.status.slice(1)}
+                      </span>
                     </span>
-                    <span className="text-sm font-bold text-slate-800">
+                    <span className="text-sm font-bold text-white">
                       ${est.total.toFixed(2)}
                     </span>
                   </div>
@@ -362,7 +369,7 @@ export default function DashboardPage() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     onClick={() => copyLink(`/view/${est.id}`, `est-${est.id}`)}
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                    className="rounded-xl bg-white/[0.06] border border-white/[0.1] px-3 py-1.5 text-xs font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1]"
                   >
                     {copiedId === `est-${est.id}` ? "Copied!" : "Copy Link"}
                   </button>
@@ -370,14 +377,14 @@ export default function DashboardPage() {
                   {est.status === "approved" && !est.invoiceId && (
                     <button
                       onClick={() => convertToInvoice(est)}
-                      className="rounded-lg bg-[#1A365D] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#2B4E7C]"
+                      className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
                     >
                       Convert to Invoice
                     </button>
                   )}
 
                   {est.invoiceId && (
-                    <span className="self-center text-xs text-slate-400">
+                    <span className="self-center text-xs text-slate-500">
                       Invoiced
                     </span>
                   )}
@@ -388,12 +395,12 @@ export default function DashboardPage() {
         )}
 
         {/* Invoices Section */}
-        <h2 className="mt-10 text-sm font-bold uppercase tracking-widest text-slate-400">
+        <h2 className="mt-10 text-xs font-semibold uppercase tracking-wider text-slate-500">
           Invoices
         </h2>
 
         {invoices.length === 0 ? (
-          <div className="mt-3 rounded-xl bg-white p-6 text-center text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">
+          <div className="mt-3 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 text-center text-sm text-slate-500">
             No invoices yet. Approve an estimate to create one.
           </div>
         ) : (
@@ -401,11 +408,11 @@ export default function DashboardPage() {
             {invoices.map((inv) => (
               <div
                 key={inv.id}
-                className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+                className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4 transition-all duration-200 hover:bg-white/[0.03]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800">
+                    <p className="text-sm font-semibold text-white">
                       {inv.customer.name || "No customer name"}
                     </p>
                     <p className="mt-0.5 text-xs text-slate-500">
@@ -414,14 +421,13 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${
-                        statusColor[inv.status]
-                      }`}
-                    >
-                      {inv.status === "unpaid" ? "Unpaid" : "Paid"}
+                    <span className="flex items-center gap-1.5">
+                      <span className={`h-2 w-2 rounded-full ${statusDot[inv.status]}`} />
+                      <span className={`text-xs font-medium ${statusText[inv.status]}`}>
+                        {inv.status === "unpaid" ? "Unpaid" : "Paid"}
+                      </span>
                     </span>
-                    <span className="text-sm font-bold text-slate-800">
+                    <span className="text-sm font-bold text-white">
                       ${inv.total.toFixed(2)}
                     </span>
                   </div>
@@ -430,22 +436,22 @@ export default function DashboardPage() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     onClick={() => copyLink(`/invoice/${inv.id}`, `inv-${inv.id}`)}
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                    className="rounded-xl bg-white/[0.06] border border-white/[0.1] px-3 py-1.5 text-xs font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1]"
                   >
                     {copiedId === `inv-${inv.id}` ? "Copied!" : "Copy Link"}
                   </button>
                   <button
                     onClick={() => generateInvoicePDF(inv)}
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                    className="rounded-xl bg-white/[0.06] border border-white/[0.1] px-3 py-1.5 text-xs font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1]"
                   >
                     Download PDF
                   </button>
                   <button
                     onClick={() => togglePaid(inv)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                       inv.status === "unpaid"
-                        ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                        : "border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-500"
+                        : "bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20"
                     }`}
                   >
                     {inv.status === "unpaid" ? "Mark as Paid" : "Mark as Unpaid"}

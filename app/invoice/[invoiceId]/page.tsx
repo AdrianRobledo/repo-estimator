@@ -49,14 +49,14 @@ export default function ViewInvoicePage() {
 
   if (notFound) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-[#0B0F1A]">
         <div className="px-6 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-200">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.05]">
             <svg className="h-6 w-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <p className="text-lg font-semibold text-slate-800">Invoice not found</p>
+          <p className="text-lg font-semibold text-white">Invoice not found</p>
           <p className="mt-1 text-sm text-slate-500">
             This link may be invalid or the invoice is no longer available.
           </p>
@@ -67,8 +67,8 @@ export default function ViewInvoicePage() {
 
   if (!invoice) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0B0F1A]">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-indigo-500" />
       </div>
     );
   }
@@ -77,21 +77,21 @@ export default function ViewInvoicePage() {
   const isPaid = invoice.status === "paid" || justPaid;
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      {/* Navy header */}
-      <div className="bg-[#1A365D]">
+    <div className="min-h-screen bg-[#0B0F1A]">
+      {/* Gradient header */}
+      <div className="bg-gradient-to-br from-[#0B0F1A] via-indigo-950 to-[#0B0F1A]">
         <div className="mx-auto max-w-lg px-5 pb-16 pt-8">
           <div className="flex items-center gap-3.5">
             {profile?.logo && (
               <img
                 src={profile.logo}
                 alt="Logo"
-                className="h-12 w-12 rounded-xl border-2 border-white/20 object-cover"
+                className="h-12 w-12 rounded-xl border-2 border-white/[0.1] object-cover"
               />
             )}
             <div className="min-w-0">
               <p className="truncate text-lg font-bold text-white">{profile?.businessName}</p>
-              <p className="truncate text-sm text-slate-300">
+              <p className="truncate text-sm text-slate-400">
                 {[profile?.phone, profile?.email].filter(Boolean).join(" · ")}
               </p>
             </div>
@@ -101,36 +101,33 @@ export default function ViewInvoicePage() {
 
       {/* Main card */}
       <div className="mx-auto -mt-8 max-w-lg px-4 pb-10">
-        <div className="overflow-hidden rounded-2xl bg-white shadow-lg shadow-slate-900/8 ring-1 ring-slate-200">
+        <div className="overflow-hidden rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] shadow-lg shadow-black/20">
           <div className="flex items-center justify-between px-5 pt-5 pb-4">
             <div>
-              <h1 className="text-xl font-bold text-slate-800">Invoice</h1>
+              <h1 className="text-xl font-bold text-white">Invoice</h1>
               <p className="mt-0.5 text-sm text-slate-500">
                 {invoice.invoiceNumber} &middot; {invoice.date}
               </p>
             </div>
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-semibold tracking-wide ring-1 ${
-                isPaid
-                  ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                  : "bg-amber-50 text-amber-700 ring-amber-200"
-              }`}
-            >
-              {isPaid ? "Paid" : "Unpaid"}
+            <span className="flex items-center gap-1.5">
+              <span className={`h-2 w-2 rounded-full ${isPaid ? "bg-emerald-400" : "bg-amber-400"}`} />
+              <span className={`text-xs font-semibold ${isPaid ? "text-emerald-400" : "text-amber-400"}`}>
+                {isPaid ? "Paid" : "Unpaid"}
+              </span>
             </span>
           </div>
 
-          <div className="mx-5 border-t border-slate-100" />
+          <div className="mx-5 border-t border-white/[0.08]" />
 
           <div className="grid grid-cols-2 gap-4 px-5 pt-4 pb-3">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Bill to</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Bill to</p>
               <div className="mt-2 space-y-0.5">
                 {invoice.customer.name && (
-                  <p className="text-sm font-semibold text-slate-800">{invoice.customer.name}</p>
+                  <p className="text-sm font-semibold text-white">{invoice.customer.name}</p>
                 )}
                 {invoice.customer.address && (
-                  <p className="text-sm text-slate-600">{invoice.customer.address}</p>
+                  <p className="text-sm text-slate-400">{invoice.customer.address}</p>
                 )}
                 {(invoice.customer.phone || invoice.customer.email) && (
                   <p className="text-sm text-slate-500">
@@ -141,15 +138,15 @@ export default function ViewInvoicePage() {
             </div>
 
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Details</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Details</p>
               <div className="mt-2 space-y-1.5">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Due Date</span>
-                  <span className="font-medium text-slate-800">{formatDisplayDate(invoice.dueDate)}</span>
+                  <span className="font-medium text-white">{formatDisplayDate(invoice.dueDate)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Estimate</span>
-                  <span className="font-medium text-slate-800">{invoice.estimateNumber}</span>
+                  <span className="font-medium text-white">{invoice.estimateNumber}</span>
                 </div>
               </div>
             </div>
@@ -157,10 +154,10 @@ export default function ViewInvoicePage() {
 
           {/* Line items */}
           <div className="mt-1">
-            <div className="grid grid-cols-[1fr_3rem_5rem] gap-2 bg-slate-50 px-5 py-2.5">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Item</span>
-              <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-400">Qty</span>
-              <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-400">Amount</span>
+            <div className="grid grid-cols-[1fr_3rem_5rem] gap-2 bg-white/[0.03] px-5 py-2.5">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Item</span>
+              <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-500">Qty</span>
+              <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-500">Amount</span>
             </div>
 
             {invoice.items.map((item, i) => {
@@ -172,22 +169,22 @@ export default function ViewInvoicePage() {
                 <div
                   key={item.id}
                   className={`grid grid-cols-[1fr_3rem_5rem] gap-2 px-5 py-3 ${
-                    i % 2 === 0 ? "bg-white" : "bg-slate-50/60"
-                  } ${i < invoice.items.length - 1 ? "border-b border-slate-100" : ""}`}
+                    i % 2 === 0 ? "" : "bg-white/[0.02]"
+                  } ${i < invoice.items.length - 1 ? "border-b border-white/[0.06]" : ""}`}
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800">{item.description || "—"}</p>
-                    <p className="text-xs text-slate-400">${price.toFixed(2)} ea.</p>
+                    <p className="text-sm font-medium text-white">{item.description || "—"}</p>
+                    <p className="text-xs text-slate-500">${price.toFixed(2)} ea.</p>
                   </div>
-                  <span className="self-center text-right text-sm text-slate-600">{qty}</span>
-                  <span className="self-center text-right text-sm font-semibold text-slate-800">${amount.toFixed(2)}</span>
+                  <span className="self-center text-right text-sm text-slate-400">{qty}</span>
+                  <span className="self-center text-right text-sm font-semibold text-white">${amount.toFixed(2)}</span>
                 </div>
               );
             })}
           </div>
 
-          <div className="mx-5 mt-2 mb-5 flex items-center justify-between rounded-xl bg-[#1A365D] px-5 py-4">
-            <span className="text-sm font-medium text-slate-300">
+          <div className="mx-5 mt-2 mb-5 flex items-center justify-between rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-5 py-4 shadow-lg shadow-indigo-500/20">
+            <span className="text-sm font-medium text-indigo-200">
               {isPaid ? "Amount Paid" : "Amount Due"}
             </span>
             <span className="text-2xl font-bold tracking-tight text-white">
@@ -203,7 +200,7 @@ export default function ViewInvoicePage() {
               type="button"
               onClick={handlePay}
               disabled={payLoading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-4 text-base font-bold text-white shadow-md shadow-emerald-600/25 transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/30 active:scale-[0.98] disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-500/30 active:scale-[0.98] disabled:opacity-50"
             >
               {payLoading ? "Redirecting..." : `Pay Now — $${invoice.total.toFixed(2)}`}
             </button>
@@ -213,37 +210,37 @@ export default function ViewInvoicePage() {
         {/* Status message */}
         <div className="mt-5 px-1">
           <div
-            className={`rounded-xl p-6 text-center shadow-sm ${
+            className={`rounded-2xl p-6 text-center backdrop-blur-xl border ${
               isPaid
-                ? "bg-emerald-50 ring-1 ring-emerald-200"
-                : "bg-white ring-1 ring-slate-200"
+                ? "bg-emerald-500/10 border-emerald-500/20"
+                : "bg-white/[0.05] border-white/[0.08]"
             }`}
           >
             {isPaid ? (
               <>
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                  <svg className="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15">
+                  <svg className="h-6 w-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-lg font-bold text-emerald-800">Payment Received</p>
-                <p className="mt-1 text-sm text-emerald-600">
+                <p className="text-lg font-bold text-emerald-400">Payment Received</p>
+                <p className="mt-1 text-sm text-emerald-400/70">
                   This invoice has been paid in full. Thank you!
                 </p>
               </>
             ) : (
               <>
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
-                  <svg className="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15">
+                  <svg className="h-6 w-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <p className="text-lg font-bold text-slate-800">Payment Due</p>
+                <p className="text-lg font-bold text-white">Payment Due</p>
                 <p className="mt-1 text-sm text-slate-500">
                   Please remit ${invoice.total.toFixed(2)} by {formatDisplayDate(invoice.dueDate)}.
                 </p>
                 {(profile?.phone || profile?.email) && (
-                  <p className="mt-2 text-xs text-slate-400">
+                  <p className="mt-2 text-xs text-slate-500">
                     Questions? Contact {[profile?.phone, profile?.email].filter(Boolean).join(" or ")}
                   </p>
                 )}
@@ -252,7 +249,7 @@ export default function ViewInvoicePage() {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-xs text-slate-400">Powered by QuickEstimate</p>
+        <p className="mt-8 text-center text-xs text-slate-500">Powered by QuickEstimate</p>
       </div>
     </div>
   );

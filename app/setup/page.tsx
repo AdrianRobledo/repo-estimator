@@ -56,35 +56,37 @@ export default function SetupPage() {
     setSaved(true);
   }
 
+  const inputClass = "mt-1 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30";
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <div className="min-h-screen bg-[#0B0F1A]">
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-indigo-500" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-[#0B0F1A]">
       <Navbar />
       <div className="mx-auto max-w-lg px-4 py-8">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+        <h1 className="text-2xl font-bold text-white">
           Business Profile
         </h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-slate-500">
           Set up your business info for estimates.
         </p>
 
-        <div className="mt-8 space-y-5">
+        <div className="mt-8 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 space-y-5">
           {/* Logo Upload */}
           <div className="flex flex-col items-center gap-3">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-zinc-300 bg-white transition-colors hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600"
+              className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-white/[0.15] bg-white/[0.05] transition-all duration-200 hover:border-white/[0.25]"
             >
               {logoPreview ? (
                 <img
@@ -94,7 +96,7 @@ export default function SetupPage() {
                 />
               ) : (
                 <svg
-                  className="h-8 w-8 text-zinc-400"
+                  className="h-8 w-8 text-slate-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -108,7 +110,7 @@ export default function SetupPage() {
                 </svg>
               )}
             </button>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            <span className="text-xs text-slate-500">
               Tap to upload logo
             </span>
             <input
@@ -122,7 +124,7 @@ export default function SetupPage() {
 
           {/* Form Fields */}
           <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="block text-sm font-medium text-slate-400">
               Business Name
             </label>
             <input
@@ -131,12 +133,12 @@ export default function SetupPage() {
               value={form.businessName}
               onChange={handleChange}
               placeholder="e.g. Mike's Plumbing"
-              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-50 dark:focus:ring-zinc-50"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="block text-sm font-medium text-slate-400">
               Owner Name
             </label>
             <input
@@ -145,12 +147,12 @@ export default function SetupPage() {
               value={form.ownerName}
               onChange={handleChange}
               placeholder="e.g. Mike Johnson"
-              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-50 dark:focus:ring-zinc-50"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="block text-sm font-medium text-slate-400">
               Phone Number
             </label>
             <input
@@ -159,12 +161,12 @@ export default function SetupPage() {
               value={form.phone}
               onChange={handleChange}
               placeholder="(555) 123-4567"
-              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-50 dark:focus:ring-zinc-50"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="block text-sm font-medium text-slate-400">
               Email
             </label>
             <input
@@ -173,20 +175,20 @@ export default function SetupPage() {
               value={form.email}
               onChange={handleChange}
               placeholder="mike@example.com"
-              className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-50 dark:focus:ring-zinc-50"
+              className={inputClass}
             />
           </div>
 
           {/* Save Button */}
           <button
             onClick={handleSave}
-            className="mt-4 w-full rounded-lg bg-zinc-900 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="mt-4 w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
           >
             Save Profile
           </button>
 
           {saved && (
-            <p className="text-center text-sm text-green-600 dark:text-green-400">
+            <p className="text-center text-sm text-emerald-400">
               Profile saved!
             </p>
           )}

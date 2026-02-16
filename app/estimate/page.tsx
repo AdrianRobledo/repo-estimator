@@ -355,8 +355,10 @@ export default function EstimatePage() {
     doc.save(`${estimateNumber}.pdf`);
   }
 
+  const inputClass = "block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30";
+
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-[#0B0F1A]">
       <Navbar />
       <div className="mx-auto max-w-lg px-4 py-8">
         {/* Business Header */}
@@ -366,14 +368,14 @@ export default function EstimatePage() {
               <img
                 src={profile.logo}
                 alt="Logo"
-                className="h-10 w-10 rounded-full object-cover"
+                className="h-10 w-10 rounded-full object-cover ring-1 ring-white/10"
               />
             )}
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+              <p className="truncate text-sm font-semibold text-white">
                 {profile.businessName}
               </p>
-              <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="truncate text-xs text-slate-500">
                 {profile.phone}
                 {profile.phone && profile.email ? " · " : ""}
                 {profile.email}
@@ -384,11 +386,11 @@ export default function EstimatePage() {
 
         {/* Estimate Info */}
         <div className="flex items-baseline justify-between">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+          <h1 className="text-2xl font-bold text-white">
             New Estimate
           </h1>
         </div>
-        <div className="mt-1 flex gap-4 text-sm text-zinc-500 dark:text-zinc-400">
+        <div className="mt-1 flex gap-4 text-sm text-slate-500">
           <span>{estimateNumber}</span>
           <span>{date}</span>
         </div>
@@ -402,7 +404,7 @@ export default function EstimatePage() {
                 e.target.value = "";
               }}
               defaultValue=""
-              className="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+              className="block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-sm text-white focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
             >
               <option value="" disabled>
                 Load from template...
@@ -418,7 +420,7 @@ export default function EstimatePage() {
 
         {/* Customer Info */}
         <fieldset className="mt-6">
-          <legend className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Customer Info
           </legend>
           <div className="mt-2 space-y-3">
@@ -428,7 +430,7 @@ export default function EstimatePage() {
               value={customer.name}
               onChange={handleCustomerChange}
               placeholder="Customer name"
-              className="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-50 dark:focus:ring-zinc-50"
+              className={inputClass}
             />
             <input
               type="text"
@@ -436,7 +438,7 @@ export default function EstimatePage() {
               value={customer.address}
               onChange={handleCustomerChange}
               placeholder="Address"
-              className="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-50 dark:focus:ring-zinc-50"
+              className={inputClass}
             />
             <div className="grid grid-cols-2 gap-3">
               <input
@@ -445,7 +447,7 @@ export default function EstimatePage() {
                 value={customer.phone}
                 onChange={handleCustomerChange}
                 placeholder="Phone"
-                className="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-50 dark:focus:ring-zinc-50"
+                className={inputClass}
               />
               <input
                 type="email"
@@ -453,7 +455,7 @@ export default function EstimatePage() {
                 value={customer.email}
                 onChange={handleCustomerChange}
                 placeholder="Email"
-                className="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-50 dark:focus:ring-zinc-50"
+                className={inputClass}
               />
             </div>
           </div>
@@ -461,24 +463,24 @@ export default function EstimatePage() {
 
         {/* Line Items */}
         <fieldset className="mt-6">
-          <legend className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Line Items
           </legend>
           <div className="mt-2 space-y-3">
             {items.map((item, index) => (
               <div
                 key={item.id}
-                className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900"
+                className="rounded-2xl bg-white/[0.05] border border-white/[0.08] p-3"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
+                  <span className="text-xs font-medium text-slate-500">
                     Item {index + 1}
                   </span>
                   {items.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeItem(item.id)}
-                      className="text-xs text-red-500 hover:text-red-600"
+                      className="text-xs text-rose-400 hover:text-rose-300 transition-colors"
                     >
                       Remove
                     </button>
@@ -491,11 +493,11 @@ export default function EstimatePage() {
                     handleItemChange(item.id, "description", e.target.value)
                   }
                   placeholder="Description"
-                  className="mt-2 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-50 dark:focus:ring-zinc-50"
+                  className="mt-2 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
                 />
                 <div className="mt-2 grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <label className="text-xs text-slate-500">
                       Qty
                     </label>
                     <input
@@ -505,11 +507,11 @@ export default function EstimatePage() {
                       onChange={(e) =>
                         handleItemChange(item.id, "quantity", e.target.value)
                       }
-                      className="mt-0.5 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-50 dark:focus:ring-zinc-50"
+                      className="mt-0.5 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <label className="text-xs text-slate-500">
                       Price ($)
                     </label>
                     <input
@@ -521,11 +523,11 @@ export default function EstimatePage() {
                         handleItemChange(item.id, "price", e.target.value)
                       }
                       placeholder="0.00"
-                      className="mt-0.5 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-600 dark:focus:border-zinc-50 dark:focus:ring-zinc-50"
+                      className="mt-0.5 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
                     />
                   </div>
                 </div>
-                <div className="mt-1.5 text-right text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="mt-1.5 text-right text-xs text-slate-500">
                   Subtotal: $
                   {(
                     (parseFloat(item.quantity) || 0) *
@@ -539,7 +541,7 @@ export default function EstimatePage() {
           <button
             type="button"
             onClick={addItem}
-            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-zinc-300 py-2.5 text-sm font-medium text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-200"
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/[0.1] py-2.5 text-sm font-medium text-slate-400 transition-all duration-200 hover:border-white/[0.2] hover:text-white"
           >
             <svg
               className="h-4 w-4"
@@ -564,7 +566,7 @@ export default function EstimatePage() {
             <button
               type="button"
               onClick={() => setShowTemplateSave(true)}
-              className="text-sm font-medium text-[#1A365D] hover:underline dark:text-blue-400"
+              className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
             >
               Save as Template
             </button>
@@ -575,19 +577,19 @@ export default function EstimatePage() {
                 value={templateName}
                 onChange={(e) => setTemplateName(e.target.value)}
                 placeholder="Template name"
-                className="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                className="block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
               />
               <button
                 type="button"
                 onClick={saveAsTemplate}
-                className="shrink-0 rounded-lg bg-[#1A365D] px-4 py-2 text-sm font-medium text-white hover:bg-[#2B4E7C]"
+                className="shrink-0 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
               >
                 Save
               </button>
               <button
                 type="button"
                 onClick={() => { setShowTemplateSave(false); setTemplateName(""); }}
-                className="shrink-0 rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400"
+                className="shrink-0 rounded-xl bg-white/[0.06] border border-white/[0.1] px-3 py-2 text-sm text-slate-400 transition-all hover:bg-white/[0.1]"
               >
                 Cancel
               </button>
@@ -596,8 +598,8 @@ export default function EstimatePage() {
         </div>
 
         {/* Total */}
-        <div className="mt-6 flex items-baseline justify-between rounded-lg bg-zinc-900 px-4 py-3 dark:bg-zinc-800">
-          <span className="text-sm font-medium text-zinc-300">Total</span>
+        <div className="mt-6 flex items-baseline justify-between rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-3 shadow-lg shadow-indigo-500/20">
+          <span className="text-sm font-medium text-indigo-200">Total</span>
           <span className="text-xl font-bold text-white">
             ${total.toFixed(2)}
           </span>
@@ -608,14 +610,14 @@ export default function EstimatePage() {
           <button
             type="button"
             onClick={generatePDF}
-            className="rounded-lg border border-zinc-300 bg-white py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
+            className="rounded-xl bg-white/[0.06] border border-white/[0.1] py-3 text-sm font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1]"
           >
             Download PDF
           </button>
           <button
             type="button"
             onClick={handleSend}
-            className="rounded-lg bg-zinc-900 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
           >
             Send to Customer
           </button>
@@ -623,8 +625,8 @@ export default function EstimatePage() {
 
         {/* Share Link */}
         {shareLink && (
-          <div className="mt-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <div className="mt-4 rounded-2xl bg-white/[0.05] border border-white/[0.08] p-4">
+            <p className="text-sm font-medium text-slate-300">
               Share this link with your customer:
             </p>
             <div className="mt-2 flex gap-2">
@@ -632,12 +634,12 @@ export default function EstimatePage() {
                 type="text"
                 readOnly
                 value={shareLink}
-                className="block w-full rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                className="block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-slate-300"
               />
               <button
                 type="button"
                 onClick={handleCopy}
-                className="shrink-0 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                className="shrink-0 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
               >
                 {copied ? "Copied!" : "Copy"}
               </button>
