@@ -15,6 +15,12 @@ export default async function Home() {
           <span className="text-xl font-bold text-white">Preciso</span>
           <div className="flex items-center gap-4">
             <Link
+              href="/pricing"
+              className="text-sm font-medium text-slate-400 transition-colors hover:text-white"
+            >
+              Pricing
+            </Link>
+            <Link
               href="/login"
               className="text-sm font-medium text-slate-400 transition-colors hover:text-white"
             >
@@ -111,24 +117,73 @@ export default async function Home() {
 
       {/* Pricing */}
       <section className="py-20">
-        <div className="mx-auto max-w-md px-6 text-center">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+        <div className="mx-auto max-w-5xl px-6">
+          <h2 className="text-center text-xs font-semibold uppercase tracking-widest text-slate-500">
             Simple Pricing
           </h2>
-          <div className="mt-8 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-8 ring-1 ring-indigo-500/20">
-            <p className="text-4xl font-bold text-white">$1</p>
-            <p className="mt-1 text-sm text-slate-500">per estimate</p>
-            <p className="mt-4 text-sm text-slate-400">
-              Your first 3 estimates are free. No subscription, no hidden fees.
-              Pay only for what you use.
-            </p>
-            <Link
-              href="/signup"
-              className="mt-6 inline-block rounded-xl bg-indigo-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
-            >
-              Start Free
-            </Link>
+          <div className="mt-10 grid gap-6 sm:grid-cols-3">
+            {/* Free */}
+            <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6">
+              <h3 className="text-base font-bold text-white">Free</h3>
+              <p className="mt-3">
+                <span className="text-3xl font-bold text-white">$0</span>
+                <span className="text-sm text-slate-500">/month</span>
+              </p>
+              <p className="mt-3 text-sm text-slate-400">3 estimates per month with PDF generation.</p>
+              <Link
+                href="/signup"
+                className="mt-5 block rounded-xl bg-white/[0.06] border border-white/[0.1] py-2.5 text-center text-sm font-semibold text-slate-300 transition-all hover:bg-white/[0.1] hover:text-white"
+              >
+                Get Started Free
+              </Link>
+            </div>
+
+            {/* Pro */}
+            <div className="relative rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-indigo-500/30 ring-1 ring-indigo-500/20 p-6 shadow-lg shadow-indigo-500/10 scale-[1.02]">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="rounded-full bg-indigo-600 px-3 py-0.5 text-xs font-bold text-white shadow-lg shadow-indigo-500/25">
+                  Recommended
+                </span>
+              </div>
+              <h3 className="text-base font-bold text-white">Pro</h3>
+              <p className="mt-3">
+                <span className="text-3xl font-bold text-white">$9.99</span>
+                <span className="text-sm text-slate-500">/month</span>
+              </p>
+              <p className="mt-3 text-sm text-slate-400">Unlimited estimates, invoicing, and online payments.</p>
+              <Link
+                href="/signup"
+                className="mt-5 block rounded-xl bg-indigo-600 py-2.5 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
+              >
+                Start Free Trial
+              </Link>
+            </div>
+
+            {/* Pay As You Go */}
+            <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6">
+              <h3 className="text-base font-bold text-white">Pay As You Go</h3>
+              <p className="mt-3">
+                <span className="text-3xl font-bold text-white">$0.99</span>
+                <span className="text-sm text-slate-500">/estimate</span>
+              </p>
+              <p className="mt-3 text-sm text-slate-400">Everything in Pro with no monthly commitment.</p>
+              <Link
+                href="/signup"
+                className="mt-5 block rounded-xl bg-white/[0.06] border border-white/[0.1] py-2.5 text-center text-sm font-semibold text-slate-300 transition-all hover:bg-white/[0.1] hover:text-white"
+              >
+                Get Started
+              </Link>
+            </div>
           </div>
+
+          <p className="mt-8 text-center">
+            <Link
+              href="/pricing"
+              className="text-sm font-medium text-indigo-400 transition-colors hover:text-indigo-300"
+            >
+              Compare all plans &rarr;
+            </Link>
+          </p>
         </div>
       </section>
 
