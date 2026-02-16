@@ -244,11 +244,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/estimates").then((r) => r.json()),
-      fetch("/api/invoices").then((r) => r.json()),
+      fetch("/api/estimates").then((r) => r.ok ? r.json() : []),
+      fetch("/api/invoices").then((r) => r.ok ? r.json() : []),
     ]).then(([est, inv]) => {
-      setEstimates(est);
-      setInvoices(inv);
+      setEstimates(Array.isArray(est) ? est : []);
+      setInvoices(Array.isArray(inv) ? inv : []);
       setLoading(false);
     });
   }, []);
@@ -265,14 +265,13 @@ export default function DashboardPage() {
     });
 
     if (res.ok) {
-      const data = await res.json();
       // Refresh data
       const [estData, invData] = await Promise.all([
-        fetch("/api/estimates").then((r) => r.json()),
-        fetch("/api/invoices").then((r) => r.json()),
+        fetch("/api/estimates").then((r) => r.ok ? r.json() : []),
+        fetch("/api/invoices").then((r) => r.ok ? r.json() : []),
       ]);
-      setEstimates(estData);
-      setInvoices(invData);
+      setEstimates(Array.isArray(estData) ? estData : []);
+      setInvoices(Array.isArray(invData) ? invData : []);
     }
   }
 

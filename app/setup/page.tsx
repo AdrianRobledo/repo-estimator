@@ -17,15 +17,17 @@ export default function SetupPage() {
 
   useEffect(() => {
     fetch("/api/profile")
-      .then((r) => r.json())
+      .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        setForm({
-          businessName: data.businessName || "",
-          ownerName: data.ownerName || "",
-          phone: data.phone || "",
-          email: data.email || "",
-        });
-        if (data.logo) setLogoPreview(data.logo);
+        if (data && !data.error) {
+          setForm({
+            businessName: data.businessName || "",
+            ownerName: data.ownerName || "",
+            phone: data.phone || "",
+            email: data.email || "",
+          });
+          if (data.logo) setLogoPreview(data.logo);
+        }
         setLoading(false);
       });
   }, []);

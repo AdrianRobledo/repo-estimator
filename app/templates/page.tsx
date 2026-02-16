@@ -10,9 +10,9 @@ export default function TemplatesPage() {
 
   useEffect(() => {
     fetch("/api/templates")
-      .then((r) => r.json())
+      .then((r) => r.ok ? r.json() : [])
       .then((data) => {
-        setTemplates(data);
+        setTemplates(Array.isArray(data) ? data : []);
         setLoading(false);
       });
   }, []);

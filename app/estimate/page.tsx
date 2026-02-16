@@ -33,6 +33,7 @@ export default function EstimatePage() {
   const [templates, setTemplates] = useState<TemplateData[]>([]);
   const [templateName, setTemplateName] = useState("");
   const [showTemplateSave, setShowTemplateSave] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(null);
 
   const [customer, setCustomer] = useState({
     name: "",
@@ -49,11 +50,11 @@ export default function EstimatePage() {
 
   useEffect(() => {
     fetch("/api/profile")
-      .then((r) => r.json())
-      .then(setProfile);
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data && !data.error) setProfile(data); });
     fetch("/api/templates")
-      .then((r) => r.json())
-      .then(setTemplates);
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => { if (Array.isArray(data)) setTemplates(data); });
   }, []);
 
   function handleCustomerChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -109,15 +110,23 @@ export default function EstimatePage() {
     return sum + qty * price;
   }, 0);
 
-  async function handleSend() {
+  async function saveEstimate(): Promise<string | null> {
+    if (savedId) return savedId;
     const res = await fetch("/api/estimates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ estimateNumber, date, customer, items, total }),
     });
-    if (res.ok) {
-      const data = await res.json();
-      const link = `${window.location.origin}/view/${data.id}`;
+    if (!res.ok) return null;
+    const data = await res.json();
+    setSavedId(data.id);
+    return data.id;
+  }
+
+  async function handleSend() {
+    const id = await saveEstimate();
+    if (id) {
+      const link = `${window.location.origin}/view/${id}`;
       setShareLink(link);
       setCopied(false);
     }
@@ -131,13 +140,8 @@ export default function EstimatePage() {
   }
 
   async function generatePDF() {
-    // Save estimate first, then generate PDF
-    const res = await fetch("/api/estimates", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ estimateNumber, date, customer, items, total }),
-    });
-    if (!res.ok) return;
+    const id = await saveEstimate();
+    if (!id) return;
 
     const doc = new jsPDF({ unit: "pt", format: "letter" });
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -404,13 +408,13 @@ export default function EstimatePage() {
                 e.target.value = "";
               }}
               defaultValue=""
-              className="block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-sm text-white focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+              className="block w-full rounded-xl bg-[#151926] border border-white/[0.1] px-3 py-2.5 text-sm text-white focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
             >
-              <option value="" disabled>
+              <option value="" disabled className="bg-[#151926] text-slate-400">
                 Load from template...
               </option>
               {templates.map((t) => (
-                <option key={t.id} value={t.id}>
+                <option key={t.id} value={t.id} className="bg-[#151926] text-white">
                   {t.name}
                 </option>
               ))}
