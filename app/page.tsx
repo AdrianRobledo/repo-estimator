@@ -12,7 +12,7 @@ export default async function Home() {
       {/* Nav */}
       <nav className="border-b border-white/[0.06]">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <span className="text-xl font-bold text-white">QuickEstimate</span>
+          <span className="text-xl font-bold text-white">Preciso</span>
           <div className="flex items-center gap-4">
             <Link
               href="/login"
@@ -135,7 +135,7 @@ export default async function Home() {
       {/* Footer */}
       <footer className="border-t border-white/[0.06] py-8">
         <p className="text-center text-sm text-slate-500">
-          QuickEstimate &mdash; Professional estimates for home service
+          Preciso AI &mdash; Professional estimates for home service
           businesses.
         </p>
       </footer>

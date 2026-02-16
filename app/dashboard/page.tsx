@@ -229,7 +229,7 @@ function generateInvoicePDF(inv: InvoiceData) {
   if (profile?.businessName) {
     doc.setFontSize(7);
     doc.setTextColor(180, 180, 180);
-    doc.text(`${profile.businessName}  •  Generated with QuickEstimate`, pageWidth / 2, pageHeight - 8, { align: "center" });
+    doc.text(`${profile.businessName}  •  Powered by Preciso AI`, pageWidth / 2, pageHeight - 8, { align: "center" });
   }
 
   doc.save(`${inv.invoiceNumber}.pdf`);

@@ -18,7 +18,7 @@ export default function Navbar() {
     <nav className="bg-white/[0.05] backdrop-blur-xl border-b border-white/[0.08]">
       <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-3">
         <Link href="/dashboard" className="text-lg font-bold text-white">
-          QuickEstimate
+          Preciso
         </Link>
         <div className="flex items-center gap-1">
           {links.map((link) => (

@@ -53,7 +53,7 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center bg-[#0B0F1A]">
       <div className="w-full max-w-sm px-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white">QuickEstimate</h1>
+          <h1 className="text-2xl font-bold text-white">Preciso</h1>
           <p className="mt-2 text-sm text-slate-500">Create your account</p>
         </div>
 

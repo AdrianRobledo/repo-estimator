@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QuickEstimate",
-  description: "Estimate and quote generator for home service businesses",
+  title: "Preciso AI",
+  description: "Professional estimates and invoices for home service businesses",
 };
 
 export default function RootLayout({

@@ -249,7 +249,7 @@ export default function ViewInvoicePage() {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-xs text-slate-500">Powered by QuickEstimate</p>
+        <p className="mt-8 text-center text-xs text-slate-500">Powered by Preciso AI</p>
       </div>
     </div>
   );
