@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import LandingNav from "@/app/components/LandingNav";
+import { tradeTemplates } from "@/lib/tradeTemplates";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -101,101 +102,44 @@ export default async function Home() {
             Built for Your Trade
           </h2>
           <div className="mt-10 grid gap-8 sm:grid-cols-3">
-            {/* Plumbing */}
-            <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 transition-all duration-200 hover:bg-white/[0.08]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/15">
-                <svg className="h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
-              </div>
-              <h3 className="mt-4 text-base font-semibold text-white">Plumbing</h3>
-              <div className="mt-3 space-y-1.5">
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Diagnose & repair leak</span><span className="text-slate-500">$185</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Replace supply valve</span><span className="text-slate-500">$45</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Materials & fittings</span><span className="text-slate-500">$65</span></div>
-              </div>
-              <div className="mt-4 flex justify-between border-t border-white/[0.08] pt-3">
-                <span className="text-xs text-slate-500">Total</span>
-                <span className="text-sm font-bold text-white">$295</span>
-              </div>
-            </div>
-
-            {/* Landscaping */}
-            <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 transition-all duration-200 hover:bg-white/[0.08]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/15">
-                <svg className="h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
-              </div>
-              <h3 className="mt-4 text-base font-semibold text-white">Landscaping</h3>
-              <div className="mt-3 space-y-1.5">
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Lawn mowing & edging</span><span className="text-slate-500">$75</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Hedge trimming</span><span className="text-slate-500">$120</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Mulch (3 yards)</span><span className="text-slate-500">$255</span></div>
-              </div>
-              <div className="mt-4 flex justify-between border-t border-white/[0.08] pt-3">
-                <span className="text-xs text-slate-500">Total</span>
-                <span className="text-sm font-bold text-white">$450</span>
-              </div>
-            </div>
-
-            {/* Electrical */}
-            <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 transition-all duration-200 hover:bg-white/[0.08]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/15">
-                <svg className="h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="mt-4 text-base font-semibold text-white">Electrical</h3>
-              <div className="mt-3 space-y-1.5">
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Install new outlet (x2)</span><span className="text-slate-500">$190</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Replace light fixture</span><span className="text-slate-500">$150</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Breaker inspection</span><span className="text-slate-500">$125</span></div>
-              </div>
-              <div className="mt-4 flex justify-between border-t border-white/[0.08] pt-3">
-                <span className="text-xs text-slate-500">Total</span>
-                <span className="text-sm font-bold text-white">$465</span>
-              </div>
-            </div>
-
-            {/* Painting */}
-            <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 transition-all duration-200 hover:bg-white/[0.08]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/15">
-                <svg className="h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                </svg>
-              </div>
-              <h3 className="mt-4 text-base font-semibold text-white">Painting</h3>
-              <div className="mt-3 space-y-1.5">
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Interior room (x3)</span><span className="text-slate-500">$1,050</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Trim & baseboards</span><span className="text-slate-500">$200</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Paint & materials</span><span className="text-slate-500">$180</span></div>
-              </div>
-              <div className="mt-4 flex justify-between border-t border-white/[0.08] pt-3">
-                <span className="text-xs text-slate-500">Total</span>
-                <span className="text-sm font-bold text-white">$1,430</span>
-              </div>
-            </div>
-
-            {/* General Handyman */}
-            <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 transition-all duration-200 hover:bg-white/[0.08]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/15">
-                <svg className="h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <h3 className="mt-4 text-base font-semibold text-white">General Handyman</h3>
-              <div className="mt-3 space-y-1.5">
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Drywall patch (x2)</span><span className="text-slate-500">$170</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Door hardware replace</span><span className="text-slate-500">$65</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-400">Labor (2 hrs)</span><span className="text-slate-500">$150</span></div>
-              </div>
-              <div className="mt-4 flex justify-between border-t border-white/[0.08] pt-3">
-                <span className="text-xs text-slate-500">Total</span>
-                <span className="text-sm font-bold text-white">$385</span>
-              </div>
-            </div>
+            {tradeTemplates.map((t) => {
+              const total = t.items.reduce(
+                (sum, item) => sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.price) || 0),
+                0
+              );
+              return (
+                <Link
+                  key={t.slug}
+                  href={`/estimate?trade=${t.slug}`}
+                  className="group rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 transition-all duration-200 hover:bg-white/[0.08] hover:border-indigo-500/30"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/15">
+                    <svg className="h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={t.iconPath} />
+                      {t.extraIconPath && (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={t.extraIconPath} />
+                      )}
+                    </svg>
+                  </div>
+                  <h3 className="mt-4 text-base font-semibold text-white">{t.name}</h3>
+                  <div className="mt-3 space-y-1.5">
+                    {t.items.map((item, i) => (
+                      <div key={i} className="flex justify-between text-sm">
+                        <span className="text-slate-400">{item.description}</span>
+                        <span className="text-slate-500">${Number(item.price).toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 flex justify-between border-t border-white/[0.08] pt-3">
+                    <span className="text-xs text-slate-500">Total</span>
+                    <span className="text-sm font-bold text-white">${total.toLocaleString()}</span>
+                  </div>
+                  <p className="mt-3 text-center text-xs font-semibold text-indigo-400 opacity-0 transition-opacity group-hover:opacity-100">
+                    Use Template &rarr;
+                  </p>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

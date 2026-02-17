@@ -8,7 +8,6 @@ import { signOut } from "next-auth/react";
 const links = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/estimate", label: "New Estimate" },
-  { href: "/templates", label: "Templates" },
   { href: "/setup", label: "Setup" },
 ];
 

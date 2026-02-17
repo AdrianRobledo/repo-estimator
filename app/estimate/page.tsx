@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { jsPDF } from "jspdf";
 import Navbar from "@/app/components/Navbar";
 import type { LineItem, BusinessProfile, TemplateData } from "@/lib/types";
+import { tradeTemplates } from "@/lib/tradeTemplates";
 
 function generateEstimateNumber() {
   const now = new Date();
@@ -24,7 +25,16 @@ function formatDate() {
 }
 
 export default function EstimatePage() {
+  return (
+    <Suspense>
+      <EstimatePageInner />
+    </Suspense>
+  );
+}
+
+function EstimatePageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
   const [estimateNumber] = useState(generateEstimateNumber);
   const [date] = useState(formatDate);
@@ -55,7 +65,22 @@ export default function EstimatePage() {
     fetch("/api/templates")
       .then((r) => r.ok ? r.json() : [])
       .then((data) => { if (Array.isArray(data)) setTemplates(data); });
-  }, []);
+
+    const trade = searchParams.get("trade");
+    if (trade) {
+      const template = tradeTemplates.find((t) => t.slug === trade);
+      if (template) {
+        const loaded = template.items.map((item, i) => ({
+          id: i + 1,
+          description: item.description,
+          quantity: item.quantity,
+          price: item.price,
+        }));
+        setItems(loaded);
+        setNextId(loaded.length + 1);
+      }
+    }
+  }, [searchParams]);
 
   function handleCustomerChange(e: React.ChangeEvent<HTMLInputElement>) {
     setCustomer({ ...customer, [e.target.name]: e.target.value });
