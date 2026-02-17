@@ -1,9 +1,12 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma as any) as NextAuthOptions["adapter"],
   session: {
     strategy: "jwt",
   },
@@ -11,6 +14,12 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
   },
   providers: [
+    GoogleProvider({
+      // TODO: Replace with your real Google OAuth credentials
+      // Create at https://console.cloud.google.com/apis/credentials
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "PLACEHOLDER_GOOGLE_CLIENT_ID",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "PLACEHOLDER_GOOGLE_CLIENT_SECRET",
+    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -24,7 +33,7 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
 
-        if (!user) return null;
+        if (!user || !user.password) return null;
 
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
