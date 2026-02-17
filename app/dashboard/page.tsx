@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { jsPDF } from "jspdf";
-import Navbar from "@/app/components/Navbar";
-import type { LineItem, EstimateData, InvoiceData } from "@/lib/types";
+import AppShell from "@/app/components/AppShell";
+import type { LineItem, BusinessProfile, EstimateData, InvoiceData } from "@/lib/types";
 
 function generateInvoiceNumber() {
   const now = new Date();
@@ -235,20 +236,32 @@ function generateInvoicePDF(inv: InvoiceData) {
   doc.save(`${inv.invoiceNumber}.pdf`);
 }
 
+const tradeQuickLinks = [
+  { slug: "plumbing", label: "Plumbing" },
+  { slug: "landscaping", label: "Landscaping" },
+  { slug: "electrical", label: "Electrical" },
+  { slug: "painting", label: "Painting" },
+  { slug: "handyman", label: "Handyman" },
+];
+
 export default function DashboardPage() {
   const router = useRouter();
   const [estimates, setEstimates] = useState<EstimateData[]>([]);
   const [invoices, setInvoices] = useState<InvoiceData[]>([]);
+  const [profile, setProfile] = useState<BusinessProfile | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [templateExpanded, setTemplateExpanded] = useState(false);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/estimates").then((r) => r.ok ? r.json() : []),
       fetch("/api/invoices").then((r) => r.ok ? r.json() : []),
-    ]).then(([est, inv]) => {
+      fetch("/api/profile").then((r) => r.ok ? r.json() : null),
+    ]).then(([est, inv, prof]) => {
       setEstimates(Array.isArray(est) ? est : []);
       setInvoices(Array.isArray(inv) ? inv : []);
+      if (prof && !prof.error) setProfile(prof);
       setLoading(false);
     });
   }, []);
@@ -265,7 +278,6 @@ export default function DashboardPage() {
     });
 
     if (res.ok) {
-      // Refresh data
       const [estData, invData] = await Promise.all([
         fetch("/api/estimates").then((r) => r.ok ? r.json() : []),
         fetch("/api/invoices").then((r) => r.ok ? r.json() : []),
@@ -311,156 +323,361 @@ export default function DashboardPage() {
     paid: "text-emerald-400",
   };
 
+  // Computed values
+  const totalEstimates = estimates.length;
+  const approved = estimates.filter((e) => e.status === "approved").length;
+  const declined = estimates.filter((e) => e.status === "declined").length;
+  const totalRevenue = invoices
+    .filter((i) => i.status === "paid")
+    .reduce((sum, i) => sum + i.total, 0);
+
+  // Onboarding checklist
+  const profileSetUp = !!(profile?.businessName && profile?.ownerName);
+  const hasEstimates = estimates.length > 0;
+  const hasSentEstimate = estimates.some((e) => e.status === "sent" || e.status === "approved" || e.status === "declined");
+  const hasApprovedOrPaid = estimates.some((e) => e.status === "approved") || invoices.some((i) => i.status === "paid");
+
+  // Recent activity
+  const recentActivity = [
+    ...estimates.map((e) => ({
+      type: "estimate" as const,
+      id: e.id,
+      label: e.customer.name || "Unnamed",
+      number: e.estimateNumber,
+      status: e.status,
+      amount: e.total,
+      date: e.date,
+    })),
+    ...invoices.map((i) => ({
+      type: "invoice" as const,
+      id: i.id,
+      label: i.customer.name || "Unnamed",
+      number: i.invoiceNumber,
+      status: i.status,
+      amount: i.total,
+      date: i.date,
+    })),
+  ]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 10);
+
+  const hasActivity = recentActivity.length > 0;
+
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0B0F1A]">
-        <Navbar />
+      <AppShell>
         <div className="flex items-center justify-center py-20">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-indigo-500" />
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0B0F1A]">
-      <Navbar />
+    <AppShell>
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+        {/* Welcome Header */}
+        <div className="animate-fade-in-up">
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">
+            Welcome back{profile?.ownerName ? `, ${profile.ownerName}` : ""}
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">{today}</p>
+        </div>
 
-      <div className="mx-auto max-w-2xl px-4 py-6">
-        {/* Estimates Section */}
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Estimates
-        </h2>
-
-        {estimates.length === 0 ? (
-          <div className="mt-3 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 text-center text-sm text-slate-500">
-            No estimates yet. Create your first one!
+        {/* Stats Bar */}
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 animate-fade-in-up delay-100">
+          <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4">
+            <p className="text-xs font-medium text-slate-500">Total Estimates</p>
+            <p className="mt-1 text-2xl font-bold text-white">{totalEstimates}</p>
           </div>
-        ) : (
-          <div className="mt-3 space-y-3">
-            {estimates.map((est) => (
-              <div
-                key={est.id}
-                className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4 transition-all duration-200 hover:bg-white/[0.03]"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white">
-                      {est.customer.name || "No customer name"}
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      {est.estimateNumber} &middot; {est.date}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className="flex items-center gap-1.5">
-                      <span className={`h-2 w-2 rounded-full ${statusDot[est.status] || "bg-slate-500"}`} />
-                      <span className={`text-xs font-medium ${statusText[est.status] || "text-slate-400"}`}>
-                        {est.status.charAt(0).toUpperCase() + est.status.slice(1)}
-                      </span>
-                    </span>
-                    <span className="text-sm font-bold text-white">
-                      ${est.total.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
+          <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4">
+            <p className="text-xs font-medium text-slate-500">Approved</p>
+            <p className="mt-1 text-2xl font-bold text-emerald-400">{approved}</p>
+          </div>
+          <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4">
+            <p className="text-xs font-medium text-slate-500">Declined</p>
+            <p className="mt-1 text-2xl font-bold text-rose-400">{declined}</p>
+          </div>
+          <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4">
+            <p className="text-xs font-medium text-slate-500">Total Revenue</p>
+            <p className="mt-1 text-2xl font-bold text-white">${totalRevenue.toFixed(2)}</p>
+          </div>
+        </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    onClick={() => copyLink(`/view/${est.id}`, `est-${est.id}`)}
-                    className="rounded-xl bg-white/[0.06] border border-white/[0.1] px-3 py-1.5 text-xs font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1]"
+        {/* Quick Actions */}
+        <div className="mt-6 grid gap-3 sm:grid-cols-3 animate-fade-in-up delay-200">
+          {/* New Estimate */}
+          <Link
+            href="/estimate"
+            className="group rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4 transition-all duration-200 hover:bg-white/[0.08] hover:border-indigo-500/30"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20">
+              <svg className="h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <p className="mt-3 text-sm font-semibold text-white">New Estimate</p>
+            <p className="mt-0.5 text-xs text-slate-500">Create a new estimate from scratch</p>
+          </Link>
+
+          {/* Use Template */}
+          <div
+            className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4 transition-all duration-200 hover:bg-white/[0.08] hover:border-violet-500/30 cursor-pointer"
+            onClick={() => setTemplateExpanded(!templateExpanded)}
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/20">
+              <svg className="h-5 w-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+              </svg>
+            </div>
+            <p className="mt-3 text-sm font-semibold text-white">Use Template</p>
+            <p className="mt-0.5 text-xs text-slate-500">Start from a trade template</p>
+            {templateExpanded && (
+              <div className="mt-3 space-y-1" onClick={(e) => e.stopPropagation()}>
+                {tradeQuickLinks.map((t) => (
+                  <Link
+                    key={t.slug}
+                    href={`/estimate?trade=${t.slug}`}
+                    className="block rounded-lg px-2 py-1.5 text-xs font-medium text-violet-300 transition-colors hover:bg-violet-500/10"
                   >
-                    {copiedId === `est-${est.id}` ? "Copied!" : "Copy Link"}
-                  </button>
-
-                  {est.status === "approved" && !est.invoiceId && (
-                    <button
-                      onClick={() => convertToInvoice(est)}
-                      className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
-                    >
-                      Convert to Invoice
-                    </button>
-                  )}
-
-                  {est.invoiceId && (
-                    <span className="self-center text-xs text-slate-500">
-                      Invoiced
-                    </span>
-                  )}
-                </div>
+                    {t.label}
+                  </Link>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
+
+          {/* View Invoices */}
+          <a
+            href="#invoices"
+            className="group rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4 transition-all duration-200 hover:bg-white/[0.08] hover:border-emerald-500/30"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20">
+              <svg className="h-5 w-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+              </svg>
+            </div>
+            <p className="mt-3 text-sm font-semibold text-white">View Invoices</p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              {invoices.length} invoice{invoices.length !== 1 ? "s" : ""}
+            </p>
+          </a>
+        </div>
+
+        {/* Recent Activity / Onboarding */}
+        <div className="mt-6 animate-fade-in-up delay-300">
+          {!hasActivity ? (
+            /* Onboarding Checklist */
+            <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-5">
+              <h3 className="text-sm font-semibold text-white">Getting Started</h3>
+              <p className="mt-1 text-xs text-slate-500">Complete these steps to get the most out of Preciso</p>
+              <div className="mt-4 space-y-3">
+                {[
+                  { done: profileSetUp, label: "Set up your business profile", href: "/setup" },
+                  { done: hasEstimates, label: "Create your first estimate", href: "/estimate" },
+                  { done: hasSentEstimate, label: "Send an estimate to a customer" },
+                  { done: hasApprovedOrPaid, label: "Get an estimate approved or invoice paid" },
+                ].map((step, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      step.done
+                        ? "bg-emerald-500/20 text-emerald-400"
+                        : "bg-white/[0.08] text-slate-500"
+                    }`}>
+                      {step.done ? (
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        i + 1
+                      )}
+                    </div>
+                    {step.href ? (
+                      <Link href={step.href} className={`text-sm ${step.done ? "text-slate-500 line-through" : "text-slate-300 hover:text-white"}`}>
+                        {step.label}
+                      </Link>
+                    ) : (
+                      <span className={`text-sm ${step.done ? "text-slate-500 line-through" : "text-slate-400"}`}>
+                        {step.label}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* Activity Timeline */
+            <div className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-5">
+              <h3 className="text-sm font-semibold text-white">Recent Activity</h3>
+              <div className="mt-4 space-y-3">
+                {recentActivity.map((item) => (
+                  <div key={`${item.type}-${item.id}`} className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${statusDot[item.status] || "bg-slate-500"}`} />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm text-white">
+                          {item.label}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {item.number} &middot; {item.type === "estimate" ? "Estimate" : "Invoice"}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-sm font-semibold text-white">
+                      ${item.amount.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Estimates Section */}
+        <div id="estimates" className="scroll-mt-6 mt-8 animate-fade-in-up delay-400">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Estimates
+          </h2>
+
+          {estimates.length === 0 ? (
+            <div className="mt-3 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 text-center text-sm text-slate-500">
+              No estimates yet. Create your first one!
+            </div>
+          ) : (
+            <div className="mt-3 space-y-3">
+              {estimates.map((est) => (
+                <div
+                  key={est.id}
+                  className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4 transition-all duration-200 hover:bg-white/[0.03]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white">
+                        {est.customer.name || "No customer name"}
+                      </p>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {est.estimateNumber} &middot; {est.date}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="flex items-center gap-1.5">
+                        <span className={`h-2 w-2 rounded-full ${statusDot[est.status] || "bg-slate-500"}`} />
+                        <span className={`text-xs font-medium ${statusText[est.status] || "text-slate-400"}`}>
+                          {est.status.charAt(0).toUpperCase() + est.status.slice(1)}
+                        </span>
+                      </span>
+                      <span className="text-sm font-bold text-white">
+                        ${est.total.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={() => copyLink(`/view/${est.id}`, `est-${est.id}`)}
+                      className="rounded-xl bg-white/[0.06] border border-white/[0.1] px-3 py-1.5 text-xs font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1]"
+                    >
+                      {copiedId === `est-${est.id}` ? "Copied!" : "Copy Link"}
+                    </button>
+
+                    {est.status === "approved" && !est.invoiceId && (
+                      <button
+                        onClick={() => convertToInvoice(est)}
+                        className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
+                      >
+                        Convert to Invoice
+                      </button>
+                    )}
+
+                    {est.invoiceId && (
+                      <span className="self-center text-xs text-slate-500">
+                        Invoiced
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Invoices Section */}
-        <h2 className="mt-10 text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Invoices
-        </h2>
+        <div id="invoices" className="scroll-mt-6 mt-8 animate-fade-in-up delay-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Invoices
+          </h2>
 
-        {invoices.length === 0 ? (
-          <div className="mt-3 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 text-center text-sm text-slate-500">
-            No invoices yet. Approve an estimate to create one.
-          </div>
-        ) : (
-          <div className="mt-3 space-y-3">
-            {invoices.map((inv) => (
-              <div
-                key={inv.id}
-                className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4 transition-all duration-200 hover:bg-white/[0.03]"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white">
-                      {inv.customer.name || "No customer name"}
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      {inv.invoiceNumber} &middot; Due{" "}
-                      {formatDisplayDate(inv.dueDate)}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className="flex items-center gap-1.5">
-                      <span className={`h-2 w-2 rounded-full ${statusDot[inv.status]}`} />
-                      <span className={`text-xs font-medium ${statusText[inv.status]}`}>
-                        {inv.status === "unpaid" ? "Unpaid" : "Paid"}
+          {invoices.length === 0 ? (
+            <div className="mt-3 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 text-center text-sm text-slate-500">
+              No invoices yet. Approve an estimate to create one.
+            </div>
+          ) : (
+            <div className="mt-3 space-y-3">
+              {invoices.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-4 transition-all duration-200 hover:bg-white/[0.03]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white">
+                        {inv.customer.name || "No customer name"}
+                      </p>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {inv.invoiceNumber} &middot; Due{" "}
+                        {formatDisplayDate(inv.dueDate)}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="flex items-center gap-1.5">
+                        <span className={`h-2 w-2 rounded-full ${statusDot[inv.status]}`} />
+                        <span className={`text-xs font-medium ${statusText[inv.status]}`}>
+                          {inv.status === "unpaid" ? "Unpaid" : "Paid"}
+                        </span>
                       </span>
-                    </span>
-                    <span className="text-sm font-bold text-white">
-                      ${inv.total.toFixed(2)}
-                    </span>
+                      <span className="text-sm font-bold text-white">
+                        ${inv.total.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={() => copyLink(`/invoice/${inv.id}`, `inv-${inv.id}`)}
+                      className="rounded-xl bg-white/[0.06] border border-white/[0.1] px-3 py-1.5 text-xs font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1]"
+                    >
+                      {copiedId === `inv-${inv.id}` ? "Copied!" : "Copy Link"}
+                    </button>
+                    <button
+                      onClick={() => generateInvoicePDF(inv)}
+                      className="rounded-xl bg-white/[0.06] border border-white/[0.1] px-3 py-1.5 text-xs font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1]"
+                    >
+                      Download PDF
+                    </button>
+                    <button
+                      onClick={() => togglePaid(inv)}
+                      className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                        inv.status === "unpaid"
+                          ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-500"
+                          : "bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20"
+                      }`}
+                    >
+                      {inv.status === "unpaid" ? "Mark as Paid" : "Mark as Unpaid"}
+                    </button>
                   </div>
                 </div>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    onClick={() => copyLink(`/invoice/${inv.id}`, `inv-${inv.id}`)}
-                    className="rounded-xl bg-white/[0.06] border border-white/[0.1] px-3 py-1.5 text-xs font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1]"
-                  >
-                    {copiedId === `inv-${inv.id}` ? "Copied!" : "Copy Link"}
-                  </button>
-                  <button
-                    onClick={() => generateInvoicePDF(inv)}
-                    className="rounded-xl bg-white/[0.06] border border-white/[0.1] px-3 py-1.5 text-xs font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1]"
-                  >
-                    Download PDF
-                  </button>
-                  <button
-                    onClick={() => togglePaid(inv)}
-                    className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
-                      inv.status === "unpaid"
-                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-500"
-                        : "bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20"
-                    }`}
-                  >
-                    {inv.status === "unpaid" ? "Mark as Paid" : "Mark as Unpaid"}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Navbar from "@/app/components/Navbar";
+import AppShell from "@/app/components/AppShell";
 
 export default function SetupPage() {
   const [form, setForm] = useState({
@@ -62,18 +62,16 @@ export default function SetupPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0B0F1A]">
-        <Navbar />
+      <AppShell>
         <div className="flex items-center justify-center py-20">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-indigo-500" />
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0B0F1A]">
-      <Navbar />
+    <AppShell>
       <div className="mx-auto max-w-lg px-4 py-8">
         <h1 className="text-2xl font-bold text-white">
           Business Profile
@@ -196,6 +194,6 @@ export default function SetupPage() {
           )}
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

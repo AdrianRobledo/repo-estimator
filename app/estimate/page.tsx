@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { jsPDF } from "jspdf";
-import Navbar from "@/app/components/Navbar";
+import AppShell from "@/app/components/AppShell";
 import type { LineItem, BusinessProfile, TemplateData } from "@/lib/types";
 import { tradeTemplates } from "@/lib/tradeTemplates";
 
@@ -387,8 +387,7 @@ function EstimatePageInner() {
   const inputClass = "block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30";
 
   return (
-    <div className="min-h-screen bg-[#0B0F1A]">
-      <Navbar />
+    <AppShell>
       <div className="mx-auto max-w-lg px-4 py-8">
         {/* Business Header */}
         {profile && (
@@ -676,6 +675,6 @@ function EstimatePageInner() {
           </div>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }
