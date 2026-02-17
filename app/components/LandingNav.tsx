@@ -21,8 +21,8 @@ export default function LandingNav() {
           Preciso
         </a>
 
-        {/* Centered links — desktop */}
-        <div className="hidden md:flex flex-1 items-center justify-center gap-1">
+        {/* Centered links — desktop only */}
+        <div className="nav-desktop flex-1 items-center justify-center gap-1">
           {navLinks.map((link) =>
             link.isPage ? (
               <Link
@@ -44,8 +44,8 @@ export default function LandingNav() {
           )}
         </div>
 
-        {/* Right side buttons — desktop */}
-        <div className="hidden md:flex items-center gap-3 shrink-0">
+        {/* Right side buttons — desktop only */}
+        <div className="nav-desktop items-center gap-3 shrink-0">
           <Link
             href="/login"
             className="rounded-xl border border-white/[0.1] px-4 py-2 text-sm font-medium text-slate-300 transition-all hover:bg-white/[0.06] hover:text-white"
@@ -61,7 +61,7 @@ export default function LandingNav() {
         </div>
 
         {/* Mobile hamburger */}
-        <div className="ml-auto md:hidden">
+        <div className="nav-mobile ml-auto">
           <button
             type="button"
             onClick={() => setOpen(!open)}
@@ -82,7 +82,7 @@ export default function LandingNav() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t border-white/[0.08] px-6 py-3 space-y-1">
+        <div className="nav-mobile border-t border-white/[0.08] px-6 py-3 space-y-1">
           {navLinks.map((link) =>
             link.isPage ? (
               <Link

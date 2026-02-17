@@ -40,3 +40,19 @@ body {
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
+
+/* Landing nav responsive helpers — explicit media queries to avoid Tailwind v4 specificity issues */
+.nav-desktop {
+  display: none;
+}
+.nav-mobile {
+  display: block;
+}
+@media (min-width: 768px) {
+  .nav-desktop {
+    display: flex !important;
+  }
+  .nav-mobile {
+    display: none !important;
+  }
+}
