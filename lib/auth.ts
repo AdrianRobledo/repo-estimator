@@ -15,10 +15,8 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     GoogleProvider({
-      // TODO: Replace with your real Google OAuth credentials
-      // Create at https://console.cloud.google.com/apis/credentials
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "PLACEHOLDER_GOOGLE_CLIENT_ID",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "PLACEHOLDER_GOOGLE_CLIENT_SECRET",
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     CredentialsProvider({
       name: "credentials",
