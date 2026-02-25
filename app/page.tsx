@@ -37,6 +37,84 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Product Screenshot */}
+      <section className="pb-16 pt-4">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="sm:rotate-1 sm:hover:rotate-0 transition-transform duration-500">
+            <div className="rounded-2xl bg-[#12131A] border border-white/[0.1] shadow-2xl shadow-black/50 overflow-hidden">
+              {/* Browser chrome */}
+              <div className="flex items-center gap-1.5 border-b border-white/[0.06] px-4 py-2.5">
+                <div className="h-2.5 w-2.5 rounded-full bg-white/[0.1]" />
+                <div className="h-2.5 w-2.5 rounded-full bg-white/[0.1]" />
+                <div className="h-2.5 w-2.5 rounded-full bg-white/[0.1]" />
+                <div className="ml-3 flex-1 rounded-md bg-white/[0.05] px-3 py-1">
+                  <p className="text-[10px] text-slate-500">precisopro.com/view/est-260225</p>
+                </div>
+              </div>
+              {/* Estimate content */}
+              <div className="px-5 py-6 sm:px-8 sm:py-8">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-lg font-bold text-white sm:text-xl">Mike&apos;s Plumbing</p>
+                    <p className="mt-0.5 text-xs text-slate-500">EST-260225-847 &middot; February 25, 2026</p>
+                  </div>
+                  <span className="shrink-0 rounded-lg bg-amber-500/15 border border-amber-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-amber-400">
+                    Sent
+                  </span>
+                </div>
+                {/* Customer */}
+                <div className="mt-5 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400">Prepared For</p>
+                  <p className="mt-1 text-sm font-medium text-white">Sarah Johnson</p>
+                  <p className="text-xs text-slate-500">1847 Oak Avenue, Sacramento, CA</p>
+                </div>
+                {/* Line items */}
+                <div className="mt-5 space-y-0">
+                  <div className="flex items-center justify-between rounded-t-lg bg-emerald-600/20 px-4 py-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Description</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Amount</p>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-4 py-3">
+                    <div>
+                      <p className="text-sm text-white">Kitchen faucet replacement</p>
+                      <p className="text-[11px] text-slate-500">1 &times; $350.00</p>
+                    </div>
+                    <p className="text-sm font-semibold text-white">$350.00</p>
+                  </div>
+                  <div className="flex items-center justify-between bg-white/[0.02] px-4 py-3">
+                    <div>
+                      <p className="text-sm text-white">Garbage disposal install</p>
+                      <p className="text-[11px] text-slate-500">1 &times; $175.00</p>
+                    </div>
+                    <p className="text-sm font-semibold text-white">$175.00</p>
+                  </div>
+                </div>
+                {/* Total */}
+                <div className="mt-4 flex items-baseline justify-between rounded-xl bg-gradient-to-r from-emerald-600/50 to-emerald-600/30 px-4 py-3">
+                  <span className="text-sm font-medium text-white">Total</span>
+                  <span className="text-xl font-bold text-white">$525.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof */}
+      <section className="pb-16">
+        <div className="mx-auto max-w-3xl px-6 text-center">
+          <p className="text-sm text-slate-500">Trusted by contractors across the United States</p>
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
+            <span className="text-xs text-slate-600">500+ Estimates Created</span>
+            <span className="hidden sm:inline text-slate-700">&middot;</span>
+            <span className="text-xs text-slate-600">4.9/5 Rating</span>
+            <span className="hidden sm:inline text-slate-700">&middot;</span>
+            <span className="text-xs text-slate-600">60 Second Setup</span>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works */}
       <section id="how-it-works" className="border-t border-white/[0.06] py-20 scroll-mt-20">
         <div className="mx-auto max-w-5xl px-6">
@@ -301,6 +379,7 @@ export default async function Home() {
         </div>
         <div className="mx-auto max-w-4xl mt-6 border-t border-white/[0.08] pt-5">
           <p className="text-center text-[12px] text-[#9CA3AF]">&copy; 2026 Preciso. All rights reserved.</p>
+          <p className="mt-1.5 text-center text-[11px] text-slate-600">Built with care in California</p>
         </div>
       </footer>
     </div>
