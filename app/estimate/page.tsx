@@ -61,6 +61,8 @@ function EstimatePageInner() {
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateSaved, setTemplateSaved] = useState(false);
 
+  const [showCongratsToast, setShowCongratsToast] = useState(false);
+
   const [customer, setCustomer] = useState({
     name: "",
     address: "",
@@ -278,6 +280,12 @@ function EstimatePageInner() {
     const data = await res.json();
     setSavedId(data.id);
     setSavedStatus(status);
+
+    // Show congrats toast for first estimate
+    if (usage && usage.estimatesUsed === 0) {
+      setShowCongratsToast(true);
+      setTimeout(() => setShowCongratsToast(false), 8000);
+    }
 
     // Auto-save new client if no existing client was selected
     if (!selectedClientId && customer.name.trim()) {
@@ -1011,6 +1019,29 @@ function EstimatePageInner() {
           )}
         </div>
       </div>
+
+      {/* Congrats Toast — first estimate */}
+      {showCongratsToast && (
+        <div className="fixed top-4 right-4 z-50 animate-fade-in-up">
+          <div className="flex items-center gap-3 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-lg shadow-emerald-500/25">
+            <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+            Nice! Now send it to your customer.
+            <button
+              onClick={() => { setShowCongratsToast(false); handleSend(); }}
+              className="ml-2 rounded-lg bg-white/20 px-3 py-1 text-xs font-bold text-white transition-all hover:bg-white/30"
+            >
+              Send
+            </button>
+            <button onClick={() => setShowCongratsToast(false)} className="ml-1 text-white/70 hover:text-white">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Send Modal */}
       {showSendModal && shareLink && (

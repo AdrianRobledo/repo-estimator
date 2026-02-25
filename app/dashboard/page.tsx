@@ -35,6 +35,7 @@ function DashboardInner() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [convertingId, setConvertingId] = useState<string | null>(null);
   const [sendModal, setSendModal] = useState<{ type: "estimate" | "invoice"; id: string } | null>(null);
+  const [skipWelcome, setSkipWelcome] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("onboarding_dismissed") === "true";
@@ -266,6 +267,54 @@ function DashboardInner() {
       <AppShell>
         <div className="flex items-center justify-center py-20">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-white" />
+        </div>
+      </AppShell>
+    );
+  }
+
+  // Welcome screen for brand-new users
+  if (estimates.length === 0 && !profile?.businessName && !skipWelcome) {
+    return (
+      <AppShell>
+        <div className="flex min-h-[80vh] items-center justify-center px-4">
+          <div className="w-full max-w-md animate-fade-in-up">
+            <div className="rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] p-8 text-center">
+              <h1 className="text-2xl font-bold text-white sm:text-3xl">
+                Welcome to Preciso!
+              </h1>
+              <p className="mt-2 text-sm text-slate-400">
+                Let&apos;s get you set up in 60 seconds.
+              </p>
+
+              <div className="mt-8 space-y-3">
+                <Link
+                  href="/setup"
+                  className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  Set Up Your Business
+                </Link>
+                <Link
+                  href="/estimate"
+                  className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-white/[0.06] border border-white/[0.1] px-5 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/[0.1]"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Your First Estimate
+                </Link>
+              </div>
+
+              <button
+                onClick={() => setSkipWelcome(true)}
+                className="mt-6 text-xs text-slate-500 transition-colors hover:text-slate-300"
+              >
+                Skip to Dashboard
+              </button>
+            </div>
+          </div>
         </div>
       </AppShell>
     );

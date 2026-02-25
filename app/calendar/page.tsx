@@ -146,7 +146,7 @@ export default function CalendarPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold text-white">Calendar</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={goToday}
               className="rounded-lg bg-white/[0.06] border border-white/[0.1] px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/[0.1] hover:text-white"
@@ -171,10 +171,10 @@ export default function CalendarPage() {
                 </svg>
               </button>
             </div>
-            <span className="min-w-[180px] text-center text-sm font-medium text-white">
+            <span className="whitespace-nowrap text-sm font-medium text-white">
               {view === "week" ? weekLabel : monthLabel}
             </span>
-            <div className="ml-2 flex rounded-lg bg-white/[0.06] border border-white/[0.1] p-0.5">
+            <div className="flex rounded-lg bg-white/[0.06] border border-white/[0.1] p-0.5">
               <button
                 onClick={() => setView("week")}
                 className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
@@ -210,22 +210,22 @@ export default function CalendarPage() {
               return (
                 <div
                   key={i}
-                  className={`flex min-h-[320px] flex-col bg-[#0A0A0F] transition-colors ${
+                  className={`flex min-h-[200px] sm:min-h-[320px] flex-col overflow-hidden bg-[#0A0A0F] transition-colors ${
                     today ? "border-t-2 border-t-white/30 bg-white/[0.03]" : ""
                   }`}
                 >
                   {/* Day header */}
-                  <div className={`px-2 py-2 text-center border-b border-white/[0.06] ${today ? "bg-white/[0.06]" : ""}`}>
-                    <p className={`text-[11px] font-medium ${today ? "text-white" : "text-slate-500"}`}>
+                  <div className={`px-1 py-1.5 sm:px-2 sm:py-2 text-center border-b border-white/[0.06] ${today ? "bg-white/[0.06]" : ""}`}>
+                    <p className={`text-[10px] sm:text-[11px] font-medium ${today ? "text-white" : "text-slate-500"}`}>
                       {DAY_NAMES[i]}
                     </p>
-                    <p className={`text-lg font-bold ${today ? "text-white" : "text-white"}`}>
+                    <p className={`text-sm sm:text-lg font-bold ${today ? "text-white" : "text-white"}`}>
                       {day.getDate()}
                     </p>
                   </div>
 
                   {/* Day content */}
-                  <div className="flex-1 p-1.5 space-y-1">
+                  <div className="flex-1 p-1 sm:p-1.5 space-y-1 overflow-hidden">
                     {dayEstimates.map((est) => {
                       const sc = getStatusColors(est.status);
                       return (
@@ -234,12 +234,12 @@ export default function CalendarPage() {
                           onClick={() => router.push(`/view/${est.id}`)}
                           onMouseEnter={(e) => handleCardHover(est, e)}
                           onMouseLeave={() => setHoveredEstimate(null)}
-                          className={`cursor-pointer rounded-lg ${sc.bg} border ${sc.border} px-2 py-1.5 transition-all hover:scale-[1.02] hover:shadow-lg`}
+                          className={`cursor-pointer overflow-hidden rounded-lg ${sc.bg} border ${sc.border} px-1 py-1 sm:px-2 sm:py-1.5 transition-all hover:scale-[1.02] hover:shadow-lg`}
                         >
-                          <p className="truncate text-xs font-medium text-white">
+                          <p className="truncate text-[10px] sm:text-xs font-medium text-white">
                             {est.customer.name || "Unnamed"}
                           </p>
-                          <p className={`text-[11px] ${sc.text}`}>
+                          <p className={`truncate text-[10px] sm:text-[11px] ${sc.text}`}>
                             ${est.total.toFixed(2)}
                           </p>
                         </div>
@@ -248,9 +248,9 @@ export default function CalendarPage() {
                     {dayEstimates.length === 0 && (
                       <Link
                         href={`/estimate?jobDate=${dateStr}`}
-                        className="flex h-full min-h-[60px] items-center justify-center rounded-lg transition-all hover:bg-white/[0.03]"
+                        className="flex h-full min-h-[40px] sm:min-h-[60px] items-center justify-center rounded-lg transition-all hover:bg-white/[0.03]"
                       >
-                        <svg className="h-5 w-5 text-slate-700 opacity-0 transition-opacity group-hover:opacity-100 hover:!opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ opacity: undefined }}>
+                        <svg className="h-4 w-4 sm:h-5 sm:w-5 text-slate-700 opacity-0 transition-opacity group-hover:opacity-100 hover:!opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ opacity: undefined }}>
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
                         </svg>
                       </Link>
@@ -268,8 +268,8 @@ export default function CalendarPage() {
             {/* Day name headers */}
             <div className="grid grid-cols-7 border-b border-white/[0.06]">
               {DAY_NAMES.map((name) => (
-                <div key={name} className="px-2 py-2 text-center">
-                  <p className="text-[11px] font-medium text-slate-500">{name}</p>
+                <div key={name} className="px-1 py-1.5 sm:px-2 sm:py-2 text-center">
+                  <p className="text-[10px] sm:text-[11px] font-medium text-slate-500">{name}</p>
                 </div>
               ))}
             </div>
@@ -294,14 +294,14 @@ export default function CalendarPage() {
                           router.push(`/estimate?jobDate=${dateStr}`);
                         }
                       }}
-                      className={`min-h-[80px] cursor-pointer border-r border-white/[0.04] last:border-r-0 p-1.5 transition-colors hover:bg-white/[0.03] ${
+                      className={`min-h-[60px] sm:min-h-[80px] cursor-pointer overflow-hidden border-r border-white/[0.04] last:border-r-0 p-1 sm:p-1.5 transition-colors hover:bg-white/[0.03] ${
                         !isCurrentMonth ? "opacity-40" : ""
                       } ${today ? "bg-white/[0.04]" : "bg-[#0A0A0F]"}`}
                     >
-                      <p className={`text-xs font-medium ${today ? "text-white" : "text-slate-400"}`}>
+                      <p className={`text-[10px] sm:text-xs font-medium ${today ? "text-white" : "text-slate-400"}`}>
                         {day.getDate()}
                       </p>
-                      <div className="mt-1 space-y-0.5">
+                      <div className="mt-0.5 sm:mt-1 space-y-0.5">
                         {dayEstimates.slice(0, 3).map((est) => {
                           const sc = getStatusColors(est.status);
                           return (
@@ -313,7 +313,7 @@ export default function CalendarPage() {
                           );
                         })}
                         {dayEstimates.length > 3 && (
-                          <p className="text-[10px] text-slate-500">+{dayEstimates.length - 3} more</p>
+                          <p className="truncate text-[9px] sm:text-[10px] text-slate-500">+{dayEstimates.length - 3}</p>
                         )}
                       </div>
                     </div>

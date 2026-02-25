@@ -317,14 +317,25 @@ export default function InvoicesPage() {
         )}
 
         {invoices.length === 0 ? (
-          <div className="mt-8 rounded-xl bg-white/[0.04] border border-white/[0.08] px-4 py-12 text-center">
-            <svg className="mx-auto h-10 w-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
-            </svg>
-            <p className="mt-3 text-sm text-slate-500">No invoices yet</p>
-            <p className="mt-1 text-xs text-slate-600">
-              Invoices are created from approved estimates
+          <div className="mt-16 flex flex-col items-center text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/[0.04] border border-white/[0.08]">
+              <svg className="h-8 w-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+              </svg>
+            </div>
+            <h2 className="mt-5 text-lg font-semibold text-white">No invoices yet</h2>
+            <p className="mt-1.5 max-w-xs text-sm text-slate-500">
+              Create an estimate first, then convert it to an invoice after your customer approves.
             </p>
+            <Link
+              href="/estimates"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Go to Estimates
+            </Link>
           </div>
         ) : results.length === 0 ? (
           <div className="mt-6 rounded-xl bg-white/[0.04] border border-white/[0.08] px-4 py-12 text-center">

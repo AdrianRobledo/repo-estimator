@@ -217,6 +217,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="lg:ml-64">
         {children}
       </div>
+
+      {/* Mobile floating "+" button */}
+      {pathname !== "/estimate" && (
+        <Link
+          href="/estimate"
+          className="fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500 active:scale-95 md:hidden"
+        >
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+          </svg>
+        </Link>
+      )}
     </div>
   );
 }

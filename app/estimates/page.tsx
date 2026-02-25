@@ -175,6 +175,28 @@ export default function EstimatesPage() {
           </Link>
         </div>
 
+        {/* Empty state — no estimates at all */}
+        {estimates.length === 0 ? (
+          <div className="mt-16 flex flex-col items-center text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/[0.04] border border-white/[0.08]">
+              <svg className="h-8 w-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h2 className="mt-5 text-lg font-semibold text-white">No estimates yet</h2>
+            <p className="mt-1.5 text-sm text-slate-500">It takes less than 60 seconds.</p>
+            <Link
+              href="/estimate"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Your First Estimate
+            </Link>
+          </div>
+        ) : (
+        <>
         {/* Filter Tabs */}
         <div className="mt-6 flex gap-1.5 overflow-x-auto">
           {tabs.map((t) => {
@@ -241,18 +263,8 @@ export default function EstimatesPage() {
             <p className="mt-3 text-sm text-slate-500">
               {search
                 ? "No estimates match your search"
-                : tab === "all"
-                  ? "No estimates yet"
-                  : `No ${tabLabels[tab].toLowerCase()} estimates`}
+                : `No ${tabLabels[tab].toLowerCase()} estimates`}
             </p>
-            {tab === "all" && !search && (
-              <Link
-                href="/estimate"
-                className="mt-3 inline-block text-sm font-medium text-slate-300 transition-colors hover:text-white"
-              >
-                Create your first estimate
-              </Link>
-            )}
           </div>
         ) : (
           <>
@@ -384,6 +396,8 @@ export default function EstimatesPage() {
               ))}
             </div>
           </>
+        )}
+        </>
         )}
       </div>
     </AppShell>
