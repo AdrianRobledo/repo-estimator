@@ -95,9 +95,19 @@ export default async function Home() {
                   <span className="text-sm font-medium text-white">Total</span>
                   <span className="text-xl font-bold text-white">$525.00</span>
                 </div>
+                {/* Approve / Decline buttons */}
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-emerald-600 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-emerald-500/25">
+                    Approve
+                  </div>
+                  <div className="rounded-xl bg-white/[0.06] border border-white/[0.1] py-3 text-center text-sm font-medium text-slate-400">
+                    Decline
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+          <p className="mt-5 text-center text-xs text-slate-500">What your customers see when you send an estimate</p>
         </div>
       </section>
 
