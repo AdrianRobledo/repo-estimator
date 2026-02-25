@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import Logo from "@/app/components/Logo";
 
 const links = [
   { href: "/dashboard", label: "Dashboard" },
@@ -18,8 +19,8 @@ export default function Navbar() {
   return (
     <nav className="bg-white/[0.05] backdrop-blur-xl border-b border-white/[0.08]">
       <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-3">
-        <Link href="/dashboard" className="text-lg font-bold text-white">
-          Preciso
+        <Link href="/dashboard" className="inline-flex">
+          <Logo />
         </Link>
 
         {/* Desktop links */}
@@ -30,7 +31,7 @@ export default function Navbar() {
               href={link.href}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
                 pathname === link.href
-                  ? "bg-indigo-500/20 text-indigo-400"
+                  ? "bg-white/[0.1] text-white"
                   : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
               }`}
             >
@@ -39,7 +40,7 @@ export default function Navbar() {
           ))}
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="ml-2 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-400 transition-all duration-200 hover:bg-rose-500/10 hover:text-rose-400"
+            className="ml-2 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-400 transition-all duration-200 hover:bg-red-500/10 hover:text-red-400"
           >
             Sign Out
           </button>
@@ -73,7 +74,7 @@ export default function Navbar() {
               onClick={() => setOpen(false)}
               className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                 pathname === link.href
-                  ? "bg-indigo-500/20 text-indigo-400"
+                  ? "bg-white/[0.1] text-white"
                   : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
               }`}
             >
@@ -82,7 +83,7 @@ export default function Navbar() {
           ))}
           <button
             onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
-            className="block w-full text-left rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-all duration-200 hover:bg-rose-500/10 hover:text-rose-400"
+            className="block w-full text-left rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-all duration-200 hover:bg-red-500/10 hover:text-red-400"
           >
             Sign Out
           </button>

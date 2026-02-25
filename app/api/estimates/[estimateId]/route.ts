@@ -12,15 +12,25 @@ export async function GET(
   const { estimateId } = await params;
   const est = await prisma.estimate.findFirst({
     where: { id: estimateId, userId },
-    include: { invoice: { select: { id: true } } },
+    include: { invoice: { select: { id: true, invoiceNumber: true } } },
   });
 
   if (!est) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { businessName: true, ownerName: true, phone: true, businessEmail: true, businessAddress: true, logo: true },
+  });
+
+  const profile = user
+    ? { businessName: user.businessName || "", ownerName: user.ownerName || "", phone: user.phone || "", email: user.businessEmail || "", address: user.businessAddress || "", logo: user.logo || null }
+    : null;
 
   return NextResponse.json({
     id: est.id,
     estimateNumber: est.estimateNumber,
     date: est.date,
+    jobDate: est.jobDate || undefined,
     status: est.status,
     customer: {
       name: est.customerName || "",
@@ -29,8 +39,13 @@ export async function GET(
       email: est.customerEmail || "",
     },
     items: JSON.parse(est.items),
+    notes: est.notes || "",
     total: est.total,
+    profile,
+    createdAt: est.createdAt.toISOString(),
+    updatedAt: est.updatedAt.toISOString(),
     invoiceId: est.invoice?.id || undefined,
+    invoiceNumber: est.invoice?.invoiceNumber || undefined,
   });
 }
 
@@ -59,6 +74,10 @@ export async function PUT(
       }),
       ...(body.items && { items: JSON.stringify(body.items) }),
       ...(body.total !== undefined && { total: body.total }),
+      ...(body.jobDate !== undefined && { jobDate: body.jobDate || null }),
+      ...(body.notes !== undefined && { notes: body.notes || null }),
+      ...(body.estimateNumber && { estimateNumber: body.estimateNumber }),
+      ...(body.date && { date: body.date }),
     },
   });
 

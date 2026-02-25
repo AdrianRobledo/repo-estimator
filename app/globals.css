@@ -1,14 +1,18 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 @theme inline {
-  --color-background: #0B0F1A;
+  --color-background: #0A0A0F;
   --color-foreground: #ffffff;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: #0B0F1A;
+  background: #0A0A0F;
   color: #ffffff;
   font-family: var(--font-sans), system-ui, sans-serif;
 }
@@ -16,15 +20,15 @@ body {
 /* Gradient mesh background for landing page */
 .bg-mesh {
   background:
-    radial-gradient(ellipse 60% 50% at 20% 40%, rgba(99, 102, 241, 0.12) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 40% at 75% 60%, rgba(139, 92, 246, 0.08) 0%, transparent 70%),
-    #0B0F1A;
+    radial-gradient(ellipse 60% 50% at 20% 40%, rgba(5, 150, 105, 0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 75% 60%, rgba(16, 185, 129, 0.05) 0%, transparent 70%),
+    #0A0A0F;
 }
 
 /* Glow pulse for buttons */
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.25); }
-  50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); }
+  0%, 100% { box-shadow: 0 0 20px rgba(5, 150, 105, 0.25); }
+  50% { box-shadow: 0 0 30px rgba(5, 150, 105, 0.4); }
 }
 
 .animate-glow {
@@ -66,9 +70,9 @@ body {
 /* Dashboard background mesh */
 .bg-dashboard-mesh {
   background:
-    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(99, 102, 241, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(16, 185, 129, 0.03) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(5, 150, 105, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(16, 185, 129, 0.025) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(16, 185, 129, 0.015) 0%, transparent 60%);
 }
 
 /* Quick action hover lift */

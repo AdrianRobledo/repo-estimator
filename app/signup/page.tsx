@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Logo from "@/app/components/Logo";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -24,42 +25,47 @@ export default function SignupPage() {
       body: JSON.stringify({ name, email, password }),
     });
 
+    const data = await res.json();
+
     if (!res.ok) {
-      const data = await res.json();
       setError(data.error || "Something went wrong");
       setLoading(false);
       return;
     }
 
-    // Auto sign in after signup
-    const signInRes = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
     setLoading(false);
 
-    if (signInRes?.error) {
-      setError("Account created but could not sign in. Please try logging in.");
+    // If account was linked to existing Google account, sign in directly
+    if (data.linked) {
+      const signInRes = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+      if (signInRes?.error) {
+        setError("Account linked but could not sign in. Please try logging in.");
+        return;
+      }
+      router.push("/dashboard");
+      router.refresh();
       return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    // New account: redirect to verify email
+    router.push(`/verify-email?email=${encodeURIComponent(email)}`);
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0B0F1A]">
+    <div className="flex min-h-screen items-center justify-center bg-[#0A0A0F]">
       <div className="w-full max-w-sm px-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white">Preciso</h1>
+          <div className="flex justify-center"><Logo size="large" /></div>
           <p className="mt-2 text-sm text-slate-500">Create your account</p>
         </div>
 
         <div className="mt-8 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 space-y-4">
           {error && (
-            <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-sm text-rose-400">
+            <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
               {error}
             </div>
           )}
@@ -96,7 +102,7 @@ export default function SignupPage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="mt-1 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                className="mt-1 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
                 placeholder="Your name"
               />
             </div>
@@ -110,7 +116,7 @@ export default function SignupPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                className="mt-1 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
                 placeholder="you@example.com"
               />
             </div>
@@ -125,7 +131,7 @@ export default function SignupPage() {
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                className="mt-1 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
                 placeholder="At least 6 characters"
               />
             </div>
@@ -133,7 +139,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500 disabled:opacity-50"
+              className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition-all hover:bg-emerald-500 disabled:opacity-50"
             >
               {loading ? "Creating account..." : "Create Account"}
             </button>
@@ -144,7 +150,7 @@ export default function SignupPage() {
           Already have an account?{" "}
           <Link
             href="/login"
-            className="font-medium text-indigo-400 hover:text-indigo-300"
+            className="font-medium text-emerald-400 hover:text-emerald-300"
           >
             Sign in
           </Link>

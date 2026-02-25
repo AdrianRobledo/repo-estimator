@@ -1,65 +1,269 @@
 export interface TradeTemplate {
   slug: string;
   name: string;
-  iconPath: string;
-  extraIconPath?: string;
-  items: { description: string; quantity: string; price: string }[];
+  category: string;
+  duration: string;
+  notes: string;
+  items: { description: string; quantity: string; typicalPrice: string }[];
 }
 
 export const tradeTemplates: TradeTemplate[] = [
+  // ── Plumbing ──────────────────────────────────────────────
   {
-    slug: "plumbing",
-    name: "Plumbing",
-    iconPath:
-      "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z",
+    slug: "faucet-replacement",
+    name: "Faucet Replacement",
+    category: "Plumbing",
+    duration: "2-3 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Includes removal of existing faucet and installation of customer-selected replacement. Supply lines replaced if corroded.",
     items: [
-      { description: "Diagnose & repair leak", quantity: "1", price: "185" },
-      { description: "Replace supply valve", quantity: "1", price: "45" },
-      { description: "Materials & fittings", quantity: "1", price: "65" },
+      { description: "Remove existing faucet & prep", quantity: "1", typicalPrice: "$65-100" },
+      { description: "Install new faucet & test", quantity: "1", typicalPrice: "$95-145" },
+      { description: "Faucet unit (standard single-handle)", quantity: "1", typicalPrice: "$100-160" },
+      { description: "Supply lines & fittings", quantity: "1", typicalPrice: "$15-35" },
+      { description: "Plumber\u2019s putty & sealant", quantity: "1", typicalPrice: "$15-35" },
     ],
   },
   {
-    slug: "landscaping",
-    name: "Landscaping",
-    iconPath:
-      "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z",
+    slug: "water-heater-install",
+    name: "Water Heater Install",
+    category: "Plumbing",
+    duration: "4-6 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Includes draining and removal of old unit, installation of new 50-gallon tank water heater. Permit fees not included.",
     items: [
-      { description: "Lawn mowing & edging", quantity: "1", price: "75" },
-      { description: "Hedge trimming", quantity: "1", price: "120" },
-      { description: "Mulch (3 yards)", quantity: "1", price: "255" },
+      { description: "Drain & remove old water heater", quantity: "1", typicalPrice: "$120-180" },
+      { description: "Install new unit & connect plumbing", quantity: "1", typicalPrice: "$275-425" },
+      { description: "Test & inspect connections", quantity: "1", typicalPrice: "$75-125" },
+      { description: "50-gal tank water heater", quantity: "1", typicalPrice: "$750-1,150" },
+      { description: "Connectors, fittings & expansion tank", quantity: "1", typicalPrice: "$140-220" },
+      { description: "Gas flex line or electrical whip", quantity: "1", typicalPrice: "$90-150" },
     ],
   },
   {
-    slug: "electrical",
-    name: "Electrical",
-    iconPath: "M13 10V3L4 14h7v7l9-11h-7z",
+    slug: "drain-cleaning",
+    name: "Drain Cleaning",
+    category: "Plumbing",
+    duration: "1-2 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Standard drain snake up to 50 ft. Camera inspection available at additional cost if blockage persists.",
     items: [
-      { description: "Install new outlet (x2)", quantity: "1", price: "190" },
-      { description: "Replace light fixture", quantity: "1", price: "150" },
-      { description: "Breaker inspection", quantity: "1", price: "125" },
+      { description: "Diagnose & locate blockage", quantity: "1", typicalPrice: "$50-100" },
+      { description: "Snake / auger drain clearing", quantity: "1", typicalPrice: "$120-180" },
+      { description: "Drain treatment solution", quantity: "1", typicalPrice: "$20-50" },
+      { description: "Replacement P-trap (if needed)", quantity: "1", typicalPrice: "$25-55" },
+      { description: "Clean-out cap & sealant", quantity: "1", typicalPrice: "$15-35" },
     ],
   },
   {
-    slug: "painting",
-    name: "Painting",
-    iconPath:
-      "M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01",
+    slug: "toilet-replacement",
+    name: "Toilet Replacement",
+    category: "Plumbing",
+    duration: "2-3 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Includes removal of existing toilet, installation of new unit, and wax ring seal. Old toilet hauled away.",
     items: [
-      { description: "Interior room (x3)", quantity: "1", price: "1050" },
-      { description: "Trim & baseboards", quantity: "1", price: "200" },
-      { description: "Paint & materials", quantity: "1", price: "180" },
+      { description: "Remove & dispose of old toilet", quantity: "1", typicalPrice: "$50-100" },
+      { description: "Install new toilet & seal", quantity: "1", typicalPrice: "$95-155" },
+      { description: "Toilet (elongated, standard height)", quantity: "1", typicalPrice: "$145-225" },
+      { description: "Wax ring, bolts & supply line", quantity: "1", typicalPrice: "$20-40" },
+      { description: "Caulk & mounting hardware", quantity: "1", typicalPrice: "$20-50" },
+    ],
+  },
+
+  // ── Landscaping ───────────────────────────────────────────
+  {
+    slug: "weekly-maintenance",
+    name: "Weekly Maintenance",
+    category: "Landscaping",
+    duration: "2-3 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Covers standard residential lot up to 1/4 acre. Additional area billed at $45/hr.",
+    items: [
+      { description: "Mowing & edging", quantity: "1", typicalPrice: "$45-85" },
+      { description: "Blowing walkways & driveway", quantity: "1", typicalPrice: "$15-35" },
+      { description: "Weed pulling (beds)", quantity: "1", typicalPrice: "$25-55" },
+      { description: "Fuel & equipment wear", quantity: "1", typicalPrice: "$15-35" },
+      { description: "Lawn treatment (seasonal)", quantity: "1", typicalPrice: "$10-30" },
     ],
   },
   {
-    slug: "handyman",
-    name: "General Handyman",
-    iconPath:
-      "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z",
-    extraIconPath: "M15 12a3 3 0 11-6 0 3 3 0 016 0z",
+    slug: "sprinkler-repair",
+    name: "Sprinkler Repair",
+    category: "Landscaping",
+    duration: "2-4 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Covers diagnosis and repair of up to 3 zones. Additional zones at $45 each.",
     items: [
-      { description: "Drywall patch (x2)", quantity: "1", price: "170" },
-      { description: "Door hardware replace", quantity: "1", price: "65" },
-      { description: "Labor (2 hrs)", quantity: "1", price: "150" },
+      { description: "System diagnosis & leak detection", quantity: "1", typicalPrice: "$65-110" },
+      { description: "Repair / replace heads & valves", quantity: "1", typicalPrice: "$70-120" },
+      { description: "Sprinkler heads (x4)", quantity: "1", typicalPrice: "$35-65" },
+      { description: "PVC fittings & risers", quantity: "1", typicalPrice: "$20-40" },
+      { description: "Valve diaphragm / solenoid", quantity: "1", typicalPrice: "$18-36" },
+    ],
+  },
+  {
+    slug: "tree-trimming",
+    name: "Tree Trimming",
+    category: "Landscaping",
+    duration: "3-5 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Price based on trees up to 30 ft. Tall or hazardous trees quoted separately. Debris hauled away.",
+    items: [
+      { description: "Trimming & shaping (per tree)", quantity: "1", typicalPrice: "$135-215" },
+      { description: "Debris cleanup & haul-away", quantity: "1", typicalPrice: "$90-150" },
+      { description: "Equipment & fuel", quantity: "1", typicalPrice: "$45-85" },
+      { description: "Wound sealant", quantity: "1", typicalPrice: "$8-22" },
+    ],
+  },
+
+  // ── Electrical ────────────────────────────────────────────
+  {
+    slug: "outlet-installation",
+    name: "Outlet Installation",
+    category: "Electrical",
+    duration: "1-2 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Includes installation of one standard 15A or 20A outlet. GFCI upgrade available. Permits if required by local code.",
+    items: [
+      { description: "Cut-in & run wiring", quantity: "1", typicalPrice: "$70-120" },
+      { description: "Install outlet & cover plate", quantity: "1", typicalPrice: "$35-75" },
+      { description: "Outlet receptacle (20A)", quantity: "1", typicalPrice: "$10-25" },
+      { description: "Romex wire (15 ft)", quantity: "1", typicalPrice: "$14-30" },
+      { description: "Box, plate & connectors", quantity: "1", typicalPrice: "$12-28" },
+    ],
+  },
+  {
+    slug: "panel-upgrade",
+    name: "Panel Upgrade",
+    category: "Electrical",
+    duration: "6-8 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Upgrade from 100A to 200A panel. Permit and inspection fees not included. Utility coordination may be required.",
+    items: [
+      { description: "Disconnect & remove old panel", quantity: "1", typicalPrice: "$190-310" },
+      { description: "Install 200A panel & breakers", quantity: "1", typicalPrice: "$350-550" },
+      { description: "Re-terminate all circuits & test", quantity: "1", typicalPrice: "$225-375" },
+      { description: "200A main breaker panel", quantity: "1", typicalPrice: "$650-1,050" },
+      { description: "Breakers (assorted)", quantity: "1", typicalPrice: "$190-310" },
+      { description: "Wire, conduit & grounding", quantity: "1", typicalPrice: "$70-130" },
+    ],
+  },
+  {
+    slug: "ceiling-fan-install",
+    name: "Ceiling Fan Install",
+    category: "Electrical",
+    duration: "1-2 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Includes mounting bracket, wiring, and assembly. Existing ceiling box must support fan weight or will be upgraded.",
+    items: [
+      { description: "Remove old fixture (if applicable)", quantity: "1", typicalPrice: "$20-50" },
+      { description: "Install fan-rated box & mount fan", quantity: "1", typicalPrice: "$80-140" },
+      { description: "Ceiling fan (52\u2033 standard)", quantity: "1", typicalPrice: "$70-120" },
+      { description: "Fan-rated ceiling box", quantity: "1", typicalPrice: "$12-28" },
+      { description: "Wire nuts & mounting hardware", quantity: "1", typicalPrice: "$8-22" },
+    ],
+  },
+
+  // ── Painting ──────────────────────────────────────────────
+  {
+    slug: "interior-room",
+    name: "Interior Room",
+    category: "Painting",
+    duration: "4-6 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Standard 12\u00d712 room, walls & ceiling. Two coats of premium latex paint. Furniture moved to center and covered.",
+    items: [
+      { description: "Surface prep, patching & taping", quantity: "1", typicalPrice: "$80-140" },
+      { description: "Prime & paint walls (2 coats)", quantity: "1", typicalPrice: "$125-205" },
+      { description: "Ceiling painting", quantity: "1", typicalPrice: "$60-110" },
+      { description: "Premium latex paint (2 gal)", quantity: "1", typicalPrice: "$55-95" },
+      { description: "Primer (1 gal)", quantity: "1", typicalPrice: "$18-38" },
+      { description: "Tape, drop cloths & sundries", quantity: "1", typicalPrice: "$12-30" },
+    ],
+  },
+  {
+    slug: "exterior-house",
+    name: "Exterior House",
+    category: "Painting",
+    duration: "3-5 days",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Standard 2-story home up to 2,500 sq ft. Includes pressure washing, scraping, priming bare spots, and two coats.",
+    items: [
+      { description: "Pressure wash & surface prep", quantity: "1", typicalPrice: "$350-550" },
+      { description: "Scrape, sand & prime bare areas", quantity: "1", typicalPrice: "$425-675" },
+      { description: "Apply 2 coats exterior paint", quantity: "1", typicalPrice: "$950-1,450" },
+      { description: "Trim, fascia & detail work", quantity: "1", typicalPrice: "$300-500" },
+      { description: "Exterior paint (15 gal)", quantity: "1", typicalPrice: "$525-825" },
+      { description: "Primer (5 gal)", quantity: "1", typicalPrice: "$110-210" },
+      { description: "Caulk, tape & sundries", quantity: "1", typicalPrice: "$50-100" },
+    ],
+  },
+  {
+    slug: "cabinet-refinishing",
+    name: "Cabinet Refinishing",
+    category: "Painting",
+    duration: "2-3 days",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Standard kitchen (up to 20 doors/drawers). Includes degreasing, sanding, priming, and two coats. Hardware reinstalled.",
+    items: [
+      { description: "Remove doors, drawers & hardware", quantity: "1", typicalPrice: "$150-250" },
+      { description: "Degrease, sand & prime all surfaces", quantity: "1", typicalPrice: "$300-500" },
+      { description: "Apply 2 coats cabinet paint", quantity: "1", typicalPrice: "$375-625" },
+      { description: "Reassemble & adjust hardware", quantity: "1", typicalPrice: "$110-190" },
+      { description: "Cabinet-grade enamel paint (3 gal)", quantity: "1", typicalPrice: "$120-210" },
+      { description: "Bonding primer (2 gal)", quantity: "1", typicalPrice: "$60-110" },
+      { description: "Sandpaper, tack cloth & supplies", quantity: "1", typicalPrice: "$20-50" },
+    ],
+  },
+
+  // ── General Handyman ──────────────────────────────────────
+  {
+    slug: "drywall-repair",
+    name: "Drywall Repair",
+    category: "General Handyman",
+    duration: "2-3 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Covers up to 3 patches (holes up to 6\u2033). Larger damage or water-damaged areas quoted separately.",
+    items: [
+      { description: "Cut out damaged area & prep", quantity: "1", typicalPrice: "$45-85" },
+      { description: "Patch, tape & mud (3 coats)", quantity: "1", typicalPrice: "$70-120" },
+      { description: "Sand & prime patch area", quantity: "1", typicalPrice: "$30-70" },
+      { description: "Drywall piece & backer", quantity: "1", typicalPrice: "$15-35" },
+      { description: "Joint compound & mesh tape", quantity: "1", typicalPrice: "$18-42" },
+      { description: "Primer & sandpaper", quantity: "1", typicalPrice: "$10-30" },
+    ],
+  },
+  {
+    slug: "door-installation",
+    name: "Door Installation",
+    category: "General Handyman",
+    duration: "2-4 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Includes removal of old door, installation of pre-hung interior door, and hardware. Trim work included.",
+    items: [
+      { description: "Remove existing door & frame", quantity: "1", typicalPrice: "$35-75" },
+      { description: "Install pre-hung door & shim", quantity: "1", typicalPrice: "$95-165" },
+      { description: "Install trim & casing", quantity: "1", typicalPrice: "$45-85" },
+      { description: "Pre-hung interior door", quantity: "1", typicalPrice: "$90-150" },
+      { description: "Lockset & hinges", quantity: "1", typicalPrice: "$22-48" },
+      { description: "Shims, nails & caulk", quantity: "1", typicalPrice: "$12-28" },
+    ],
+  },
+  {
+    slug: "deck-repair",
+    name: "Deck Repair",
+    category: "General Handyman",
+    duration: "4-6 hrs",
+    notes:
+      "Price valid for 30 days. Materials may vary based on site conditions. Covers replacement of up to 10 damaged deck boards, fastener replacement, and post tightening. Full rebuild quoted separately.",
+    items: [
+      { description: "Inspect & remove damaged boards", quantity: "1", typicalPrice: "$70-120" },
+      { description: "Install replacement boards", quantity: "1", typicalPrice: "$135-215" },
+      { description: "Tighten posts & railing hardware", quantity: "1", typicalPrice: "$55-105" },
+      { description: "Pressure-treated deck boards (x10)", quantity: "1", typicalPrice: "$200-360" },
+      { description: "Deck screws & fasteners", quantity: "1", typicalPrice: "$22-48" },
+      { description: "Wood sealant (1 gal)", quantity: "1", typicalPrice: "$160-260" },
     ],
   },
 ];

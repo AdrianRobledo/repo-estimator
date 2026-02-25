@@ -15,7 +15,10 @@ export async function GET() {
     templates.map((t) => ({
       id: t.id,
       name: t.name,
+      jobTitle: t.jobTitle,
       items: JSON.parse(t.items),
+      clientMessage: t.clientMessage,
+      disclaimer: t.disclaimer,
     }))
   );
 }
@@ -24,7 +27,7 @@ export async function POST(req: Request) {
   const userId = await getAuthUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { name, items } = await req.json();
+  const { name, items, jobTitle, clientMessage, disclaimer } = await req.json();
 
   if (!name) {
     return NextResponse.json({ error: "Template name is required" }, { status: 400 });
@@ -34,6 +37,9 @@ export async function POST(req: Request) {
     data: {
       name,
       items: JSON.stringify(items),
+      jobTitle: jobTitle || null,
+      clientMessage: clientMessage || null,
+      disclaimer: disclaimer || null,
       userId,
     },
   });

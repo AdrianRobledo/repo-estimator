@@ -10,6 +10,7 @@ export interface BusinessProfile {
   ownerName: string;
   phone: string;
   email: string;
+  address: string;
   logo: string | null;
 }
 
@@ -24,12 +25,15 @@ export interface EstimateData {
   id: string;
   estimateNumber: string;
   date: string;
+  jobDate?: string;
   status: string;
   customer: Customer;
   items: LineItem[];
+  notes?: string;
   total: number;
   profile: BusinessProfile | null;
   invoiceId?: string;
+  invoiceNumber?: string;
 }
 
 export interface InvoiceData {
@@ -48,8 +52,20 @@ export interface InvoiceData {
   stripePaidAt?: string | null;
 }
 
+export interface ClientData {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  estimateCount?: number;
+}
+
 export interface TemplateData {
   id: string;
   name: string;
+  jobTitle?: string;
   items: LineItem[];
+  clientMessage?: string;
+  disclaimer?: string;
 }

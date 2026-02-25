@@ -4,25 +4,35 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
+  emailVerified DateTime?
+  image         String?
   password      String?
   businessName  String?
   ownerName     String?
   phone         String?
-  businessEmail String?
-  logo          String?
+  businessEmail    String?
+  businessAddress  String?
+  logo             String?
+
+  plan                  String    @default("free")
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  stripePriceId         String?
+  stripeCurrentPeriodEnd DateTime?
 
   accounts  Account[]
   sessions  Session[]
   estimates Estimate[]
   invoices  Invoice[]
   templates Template[]
+  clients   Client[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -66,7 +76,9 @@ model Estimate {
   customerPhone  String?
   customerEmail  String?
   items          String
+  notes          String?
   total          Float   @default(0)
+  jobDate        String?
 
   userId  String
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -103,13 +115,40 @@ model Invoice {
 }
 
 model Template {
-  id    String @id @default(cuid())
-  name  String
-  items String
+  id            String  @id @default(cuid())
+  name          String
+  items         String
+  jobTitle      String?
+  clientMessage String?
+  disclaimer    String?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id      String  @id @default(cuid())
+  name    String
+  email   String?
+  phone   String?
+  address String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  type    String   // "email_verification" or "password_reset"
+  expires DateTime
+
+  createdAt DateTime @default(now())
 }

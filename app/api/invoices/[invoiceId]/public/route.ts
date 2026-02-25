@@ -10,7 +10,7 @@ export async function GET(
     where: { id: invoiceId },
     include: {
       estimate: { select: { estimateNumber: true } },
-      user: { select: { businessName: true, ownerName: true, phone: true, businessEmail: true, logo: true } },
+      user: { select: { businessName: true, ownerName: true, phone: true, businessEmail: true, businessAddress: true, logo: true } },
     },
   });
 
@@ -37,6 +37,7 @@ export async function GET(
       ownerName: inv.user.ownerName || "",
       phone: inv.user.phone || "",
       email: inv.user.businessEmail || "",
+      address: inv.user.businessAddress || "",
       logo: inv.user.logo || null,
     },
     stripeSessionId: inv.stripeSessionId,

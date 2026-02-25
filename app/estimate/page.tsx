@@ -1,11 +1,11 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, useEffect, useRef } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { jsPDF } from "jspdf";
 import AppShell from "@/app/components/AppShell";
-import type { LineItem, BusinessProfile, TemplateData } from "@/lib/types";
-import { tradeTemplates } from "@/lib/tradeTemplates";
+import SendModal from "@/app/components/SendModal";
+import type { LineItem, BusinessProfile, TemplateData, ClientData } from "@/lib/types";
 
 function generateEstimateNumber() {
   const now = new Date();
@@ -33,17 +33,33 @@ export default function EstimatePage() {
 }
 
 function EstimatePageInner() {
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const [editId, setEditId] = useState<string | null>(null);
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
-  const [estimateNumber] = useState(generateEstimateNumber);
-  const [date] = useState(formatDate);
-  const [shareLink, setShareLink] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [estimateNumber, setEstimateNumber] = useState("");
+  const [date, setDate] = useState("");
   const [templates, setTemplates] = useState<TemplateData[]>([]);
-  const [templateName, setTemplateName] = useState("");
-  const [showTemplateSave, setShowTemplateSave] = useState(false);
+  const [clients, setClients] = useState<ClientData[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [clientSearch, setClientSearch] = useState("");
+  const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [savedStatus, setSavedStatus] = useState<string | null>(null);
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  const [usage, setUsage] = useState<{ plan: string; estimatesUsed: number; estimateLimit: number | null } | null>(null);
+  const [jobDate, setJobDate] = useState("");
+  const [nameError, setNameError] = useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateSaved, setTemplateSaved] = useState(false);
 
   const [customer, setCustomer] = useState({
     name: "",
@@ -57,43 +73,122 @@ function EstimatePageInner() {
   ]);
 
   const [nextId, setNextId] = useState(2);
+  const clientDropdownRef = useRef<HTMLDivElement>(null);
+  const templateSelectRef = useRef<HTMLSelectElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (clientDropdownRef.current && !clientDropdownRef.current.contains(e.target as Node)) {
+        setClientDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     fetch("/api/profile")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data && !data.error) setProfile(data); });
+    fetch("/api/usage")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data && !data.error) setUsage(data); });
     fetch("/api/templates")
       .then((r) => r.ok ? r.json() : [])
       .then((data) => { if (Array.isArray(data)) setTemplates(data); });
+    fetch("/api/clients")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => { if (Array.isArray(data)) setClients(data); });
 
-    const trade = searchParams.get("trade");
-    if (trade) {
-      const template = tradeTemplates.find((t) => t.slug === trade);
-      if (template) {
-        const loaded = template.items.map((item, i) => ({
-          id: i + 1,
-          description: item.description,
-          quantity: item.quantity,
-          price: item.price,
-        }));
-        setItems(loaded);
-        setNextId(loaded.length + 1);
-      }
+    setEstimateNumber(generateEstimateNumber());
+    setDate(formatDate());
+
+    const jobDateParam = searchParams.get("jobDate");
+    if (jobDateParam) setJobDate(jobDateParam);
+
+    const templateId = searchParams.get("template");
+    if (templateId) {
+      fetch(`/api/templates/${templateId}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (data && data.items) {
+            applyTemplateData(data);
+          }
+        });
+    }
+
+    const editParam = searchParams.get("edit");
+    if (editParam) {
+      fetch(`/api/estimates/${editParam}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (data) {
+            setEditId(editParam);
+            setEstimateNumber(data.estimateNumber);
+            setDate(data.date);
+            setCustomer(data.customer);
+            setNotes(data.notes || "");
+            if (data.jobDate) setJobDate(data.jobDate);
+            const loaded = data.items.map((item: LineItem, i: number) => ({ ...item, id: i + 1 }));
+            setItems(loaded);
+            setNextId(loaded.length + 1);
+          }
+        });
     }
   }, [searchParams]);
 
-  function handleCustomerChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setCustomer({ ...customer, [e.target.name]: e.target.value });
+  function applyTemplateData(data: TemplateData) {
+    const loaded = data.items.map((item: LineItem, i: number) => ({ ...item, id: i + 1 }));
+    setItems(loaded);
+    setNextId(loaded.length + 1);
+    if (data.clientMessage) {
+      setNotes(data.clientMessage);
+    }
+    if (data.disclaimer) {
+      setNotes((prev) => {
+        const base = prev || data.clientMessage || "";
+        return base ? `${base}\n\n${data.disclaimer}` : data.disclaimer!;
+      });
+    }
   }
 
-  function handleItemChange(
-    id: number,
-    field: keyof LineItem,
-    value: string
-  ) {
-    setItems(
-      items.map((item) => (item.id === id ? { ...item, [field]: value } : item))
-    );
+  function handleTemplateSelect(templateId: string) {
+    if (!templateId) return;
+    const t = templates.find((t) => t.id === templateId);
+    if (!t) return;
+    applyTemplateData(t);
+  }
+
+  function handleCustomerChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setCustomer({ ...customer, [e.target.name]: e.target.value });
+    setSelectedClientId(null);
+    if (e.target.name === "name" && e.target.value.trim()) setNameError(false);
+  }
+
+  function handleClientSelect(client: ClientData) {
+    setSelectedClientId(client.id);
+    setNameError(false);
+    setCustomer({
+      name: client.name,
+      address: client.address || "",
+      phone: client.phone || "",
+      email: client.email || "",
+    });
+    setClientSearch("");
+    setClientDropdownOpen(false);
+  }
+
+  const filteredClients = clientSearch
+    ? clients.filter(
+        (c) =>
+          c.name.toLowerCase().includes(clientSearch.toLowerCase()) ||
+          (c.email && c.email.toLowerCase().includes(clientSearch.toLowerCase())) ||
+          (c.phone && c.phone.includes(clientSearch))
+      )
+    : clients;
+
+  function handleItemChange(id: number, field: keyof LineItem, value: string) {
+    setItems(items.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
   }
 
   function addItem() {
@@ -106,289 +201,445 @@ function EstimatePageInner() {
     setItems(items.filter((item) => item.id !== id));
   }
 
-  function loadTemplate(templateId: string) {
-    const t = templates.find((t) => t.id === templateId);
-    if (!t) return;
-    const loaded = t.items.map((item, i) => ({ ...item, id: nextId + i }));
-    setItems(loaded);
-    setNextId(nextId + loaded.length);
-  }
-
-  async function saveAsTemplate() {
-    if (!templateName.trim()) return;
-    const res = await fetch("/api/templates", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: templateName, items }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setTemplates([{ id: data.id, name: templateName, items }, ...templates]);
-      setTemplateName("");
-      setShowTemplateSave(false);
-    }
-  }
-
   const total = items.reduce((sum, item) => {
     const qty = parseFloat(item.quantity) || 0;
     const price = parseFloat(item.price) || 0;
     return sum + qty * price;
   }, 0);
 
-  async function saveEstimate(): Promise<string | null> {
-    if (savedId) return savedId;
+  async function handleSaveAsTemplate() {
+    if (!templateName.trim()) return;
+    setSavingTemplate(true);
+    try {
+      const res = await fetch("/api/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: templateName.trim(),
+          items: items.map(({ description, quantity, price }) => ({ description, quantity, price })),
+          clientMessage: notes || undefined,
+        }),
+      });
+      if (res.ok) {
+        setTemplateSaved(true);
+        setShowSaveTemplate(false);
+        setTemplateName("");
+        // Refresh templates list
+        const updated = await fetch("/api/templates").then((r) => r.ok ? r.json() : []);
+        if (Array.isArray(updated)) setTemplates(updated);
+        setTimeout(() => setTemplateSaved(false), 3000);
+      }
+    } catch {
+      // silent
+    } finally {
+      setSavingTemplate(false);
+    }
+  }
+
+  // Stripe checkout temporarily disabled for launch
+
+  async function saveEstimate(status: "draft" | "sent"): Promise<string | null> {
+    // Edit mode — PUT to update existing estimate
+    if (editId) {
+      const res = await fetch(`/api/estimates/${editId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estimateNumber, date, jobDate: jobDate || undefined, customer, items, total, notes: notes || undefined, status }),
+      });
+      if (!res.ok) return null;
+      return editId;
+    }
+
+    if (savedId) {
+      // Already saved — if upgrading from draft to sent, update status
+      if (status === "sent" && savedStatus === "draft") {
+        const res = await fetch(`/api/estimates/${savedId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "sent" }),
+        });
+        if (res.ok) setSavedStatus("sent");
+      }
+      return savedId;
+    }
     const res = await fetch("/api/estimates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ estimateNumber, date, customer, items, total }),
+      body: JSON.stringify({ estimateNumber, date, jobDate: jobDate || undefined, customer, items, total, notes: notes || undefined, status }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      if (res.status === 403 && errData.error === "limit_reached") {
+        setShowUpgradeModal(true);
+        return null;
+      }
+      return null;
+    }
     const data = await res.json();
     setSavedId(data.id);
+    setSavedStatus(status);
+
+    // Auto-save new client if no existing client was selected
+    if (!selectedClientId && customer.name.trim()) {
+      fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: customer.name,
+          email: customer.email || undefined,
+          phone: customer.phone || undefined,
+          address: customer.address || undefined,
+        }),
+      }).catch(() => {});
+    }
+
     return data.id;
   }
 
-  async function handleSend() {
-    const id = await saveEstimate();
-    if (id) {
-      const link = `${window.location.origin}/view/${id}`;
-      setShareLink(link);
-      setCopied(false);
+  async function handleSaveDraft() {
+    if (!customer.name.trim()) { setNameError(true); return; }
+    setNameError(false);
+    setSaving(true);
+    setError(null);
+    try {
+      const id = await saveEstimate("draft");
+      if (!id) throw new Error("Save failed");
+      if (editId) { router.push(`/estimates/${editId}`); return; }
+    } catch {
+      setError("Could not save estimate. Please try again.");
+    } finally {
+      setSaving(false);
     }
   }
 
-  function handleCopy() {
-    if (!shareLink) return;
-    navigator.clipboard.writeText(shareLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  async function handleSend() {
+    if (!customer.name.trim()) { setNameError(true); return; }
+    setNameError(false);
+    setSaving(true);
+    setError(null);
+    try {
+      const id = await saveEstimate("sent");
+      if (!id) throw new Error("Save failed");
+      if (editId) { router.push(`/estimates/${editId}`); return; }
+      const link = `${window.location.origin}/view/${id}`;
+      setShareLink(link);
+      setShowSendModal(true);
+    } catch {
+      setError("Could not save estimate. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function generatePDF() {
-    const id = await saveEstimate();
-    if (!id) return;
+    if (!customer.name.trim()) { setNameError(true); return; }
+    setNameError(false);
+    setSaving(true);
+    setError(null);
+    try {
+      const id = await saveEstimate("sent");
+      if (!id) throw new Error("Save failed");
 
-    const doc = new jsPDF({ unit: "pt", format: "letter" });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 48;
-    const contentWidth = pageWidth - margin * 2;
-    let y = 0;
+      const doc = new jsPDF({ unit: "pt", format: "letter" });
+      const pw = doc.internal.pageSize.getWidth();
+      const ph = doc.internal.pageSize.getHeight();
+      const m = 48;
+      const cw = pw - m * 2;
+      let y = 0;
 
-    // Color palette — navy + warm gray
-    const navy = { r: 26, g: 54, b: 93 };
-    const slate = { r: 100, g: 116, b: 139 };
-    const grayBg = { r: 243, g: 244, b: 246 };
-    const grayLine = { r: 209, g: 213, b: 219 };
+      // Brand colors
+      const green = { r: 5, g: 150, b: 105 }; // emerald-600
+      const darkGreen = { r: 4, g: 120, b: 87 }; // emerald-700
+      const navy = { r: 15, g: 23, b: 42 }; // slate-900
+      const dark = { r: 30, g: 41, b: 59 }; // slate-800
+      const slate = { r: 100, g: 116, b: 139 };
+      const lightSlate = { r: 148, g: 163, b: 184 };
+      const grayBg = { r: 248, g: 250, b: 252 }; // slate-50
+      const grayLine = { r: 226, g: 232, b: 240 }; // slate-200
 
-    // ===== NAVY TOP BAR =====
-    doc.setFillColor(navy.r, navy.g, navy.b);
-    doc.rect(0, 0, pageWidth, 110, "F");
-
-    let headerTextX = margin;
-    if (profile?.logo) {
-      try {
-        doc.addImage(profile.logo, "JPEG", margin, 24, 60, 60);
-        headerTextX = margin + 74;
-      } catch {
-        // logo failed
+      // ===== HEADER SECTION =====
+      // White background header with logo + business info
+      y = m;
+      let logoEndX = m;
+      if (profile?.logo) {
+        try {
+          doc.addImage(profile.logo, "JPEG", m, y - 8, 52, 52);
+          logoEndX = m + 62;
+        } catch { /* logo failed */ }
       }
-    }
 
-    if (profile) {
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(22);
+      if (profile) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(20);
+        doc.setTextColor(navy.r, navy.g, navy.b);
+        doc.text(profile.businessName || "", logoEndX, y + 12);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.setTextColor(slate.r, slate.g, slate.b);
+        const contactLeft = [profile.ownerName, profile.phone].filter(Boolean).join("  \u00B7  ");
+        if (contactLeft) doc.text(contactLeft, logoEndX, y + 28);
+        if (profile.email) doc.text(profile.email, logoEndX, y + 40);
+        if (profile.address) doc.text(profile.address, logoEndX, y + 52);
+
+        // Right-aligned contact on second column
+        const rightContact = [profile.phone, profile.email].filter(Boolean);
+        if (rightContact.length) {
+          doc.setFontSize(8.5);
+          doc.setTextColor(lightSlate.r, lightSlate.g, lightSlate.b);
+          let ry = y + 12;
+          rightContact.forEach((line) => {
+            doc.text(line!, pw - m, ry, { align: "right" });
+            ry += 12;
+          });
+        }
+      }
+
+      y += 56;
+
+      // ===== GREEN ACCENT BAR =====
+      doc.setFillColor(green.r, green.g, green.b);
+      doc.rect(0, y, pw, 4, "F");
+      y += 20;
+
+      // ===== ESTIMATE TITLE ROW =====
       doc.setFont("helvetica", "bold");
-      doc.text(profile.businessName || "", headerTextX, 50);
+      doc.setFontSize(28);
+      doc.setTextColor(navy.r, navy.g, navy.b);
+      doc.text("ESTIMATE", m, y + 4);
+
+      // Right side: number + date
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(slate.r, slate.g, slate.b);
+      doc.text("Estimate No.", pw - m - 120, y - 8);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(dark.r, dark.g, dark.b);
+      doc.text(estimateNumber, pw - m, y - 8, { align: "right" });
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(slate.r, slate.g, slate.b);
+      doc.text("Date", pw - m - 120, y + 6);
+      doc.setTextColor(dark.r, dark.g, dark.b);
+      doc.text(date, pw - m, y + 6, { align: "right" });
+
+      if (jobDate) {
+        doc.setTextColor(slate.r, slate.g, slate.b);
+        doc.text("Scheduled Date", pw - m - 120, y + 20);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(green.r, green.g, green.b);
+        const jd = new Date(jobDate + "T00:00:00");
+        doc.text(jd.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), pw - m, y + 20, { align: "right" });
+      }
+
+      y += 40;
+
+      // ===== PREPARED FOR BOX =====
+      doc.setFillColor(grayBg.r, grayBg.g, grayBg.b);
+      doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b);
+      doc.setLineWidth(0.75);
+      const boxH = 80;
+      doc.roundedRect(m, y, cw, boxH, 6, 6, "FD");
+
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(green.r, green.g, green.b);
+      doc.text("PREPARED FOR", m + 14, y + 16);
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(dark.r, dark.g, dark.b);
+      doc.setFontSize(10);
+      let cy = y + 32;
+      if (customer.name) {
+        doc.setFont("helvetica", "bold");
+        doc.text(customer.name, m + 14, cy);
+        doc.setFont("helvetica", "normal");
+        cy += 14;
+      }
+      if (customer.address) {
+        doc.setTextColor(slate.r, slate.g, slate.b);
+        doc.text(customer.address, m + 14, cy);
+        cy += 14;
+      }
+      const custContact = [customer.phone, customer.email].filter(Boolean).join("  \u00B7  ");
+      if (custContact) {
+        doc.setTextColor(slate.r, slate.g, slate.b);
+        doc.setFontSize(9);
+        doc.text(custContact, m + 14, cy);
+      }
+
+      y += boxH + 20;
+
+      // ===== LINE ITEMS TABLE =====
+      const colDesc = m;
+      const colQty = m + cw * 0.52;
+      const colPrice = m + cw * 0.72;
+      const colAmount = pw - m;
+      const rowH = 30;
+
+      // Table header with green background
+      doc.setFillColor(darkGreen.r, darkGreen.g, darkGreen.b);
+      doc.roundedRect(m, y, cw, rowH, 4, 4, "F");
+      // Cover bottom corners so only top is rounded
+      doc.setFillColor(darkGreen.r, darkGreen.g, darkGreen.b);
+      doc.rect(m, y + rowH - 6, cw, 6, "F");
+
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(255, 255, 255);
+      doc.text("DESCRIPTION", colDesc + 12, y + 19);
+      doc.text("QTY", colQty, y + 19, { align: "right" });
+      doc.text("UNIT PRICE", colPrice, y + 19, { align: "right" });
+      doc.text("AMOUNT", colAmount - 12, y + 19, { align: "right" });
+      y += rowH;
+
+      // Table rows
+      doc.setFontSize(9);
+      items.forEach((item, i) => {
+        const qty = parseFloat(item.quantity) || 0;
+        const price = parseFloat(item.price) || 0;
+        const amount = qty * price;
+
+        if (y > ph - 150) { doc.addPage(); y = m; }
+
+        if (i % 2 === 0) {
+          doc.setFillColor(grayBg.r, grayBg.g, grayBg.b);
+          doc.rect(m, y, cw, rowH, "F");
+        }
+
+        // Left border accent on every row
+        doc.setFillColor(green.r, green.g, green.b);
+        doc.rect(m, y, 2, rowH, "F");
+
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(dark.r, dark.g, dark.b);
+        doc.text(item.description || "\u2014", colDesc + 12, y + 19);
+        doc.setTextColor(slate.r, slate.g, slate.b);
+        doc.text(qty.toString(), colQty, y + 19, { align: "right" });
+        doc.text(`$${price.toFixed(2)}`, colPrice, y + 19, { align: "right" });
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(dark.r, dark.g, dark.b);
+        doc.text(`$${amount.toFixed(2)}`, colAmount - 12, y + 19, { align: "right" });
+        y += rowH;
+
+        // Row separator
+        doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b);
+        doc.setLineWidth(0.5);
+        doc.line(m, y, pw - m, y);
+      });
+
+      y += 12;
+
+      // ===== TOTALS =====
+      const totalsX = pw - m - 200;
+      const totalsValX = pw - m - 12;
+
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(200, 215, 235);
-      const contactParts = [profile.ownerName, profile.phone, profile.email].filter(Boolean);
-      doc.text(contactParts.join("   |   "), headerTextX, 68);
-    }
+      doc.setTextColor(slate.r, slate.g, slate.b);
+      doc.text("Subtotal", totalsX, y + 14);
+      doc.setTextColor(dark.r, dark.g, dark.b);
+      doc.text(`$${total.toFixed(2)}`, totalsValX, y + 14, { align: "right" });
+      y += 24;
 
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(28);
-    doc.setFont("helvetica", "bold");
-    doc.text("ESTIMATE", pageWidth - margin, 52, { align: "right" });
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(200, 215, 235);
-    doc.text(estimateNumber, pageWidth - margin, 70, { align: "right" });
-    doc.text(date, pageWidth - margin, 84, { align: "right" });
+      doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b);
+      doc.setLineWidth(0.5);
+      doc.line(totalsX, y, pw - m, y);
+      y += 4;
 
-    y = 130;
+      // Total due box with green gradient feel
+      doc.setFillColor(green.r, green.g, green.b);
+      doc.roundedRect(totalsX - 10, y, 222, 38, 6, 6, "F");
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(255, 255, 255);
+      doc.text("TOTAL DUE", totalsX + 6, y + 24);
+      doc.setFontSize(16);
+      doc.text(`$${total.toFixed(2)}`, totalsValX, y + 24, { align: "right" });
+      y += 56;
 
-    const colLeft = margin;
-    const colRight = pageWidth / 2 + 20;
+      // ===== NOTES =====
+      if (notes) {
+        if (y > ph - 140) { doc.addPage(); y = m; }
 
-    doc.setFontSize(7.5);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(slate.r, slate.g, slate.b);
-    doc.text("PREPARED FOR", colLeft, y);
-    doc.text("ESTIMATE DETAILS", colRight, y);
-    y += 14;
-
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(50, 50, 50);
-    doc.setFontSize(10);
-
-    let custY = y;
-    if (customer.name) { doc.setFont("helvetica", "bold"); doc.text(customer.name, colLeft, custY); doc.setFont("helvetica", "normal"); custY += 15; }
-    if (customer.address) { doc.text(customer.address, colLeft, custY); custY += 15; }
-    if (customer.phone) { doc.text(customer.phone, colLeft, custY); custY += 15; }
-    if (customer.email) { doc.text(customer.email, colLeft, custY); custY += 15; }
-
-    let detY = y;
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(slate.r, slate.g, slate.b);
-    doc.setFontSize(9);
-    doc.text("Estimate No.", colRight, detY);
-    doc.setTextColor(50, 50, 50);
-    doc.setFont("helvetica", "bold");
-    doc.text(estimateNumber, colRight + 80, detY);
-
-    detY += 15;
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(slate.r, slate.g, slate.b);
-    doc.text("Date", colRight, detY);
-    doc.setTextColor(50, 50, 50);
-    doc.text(date, colRight + 80, detY);
-
-    detY += 15;
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(slate.r, slate.g, slate.b);
-    doc.text("Valid Until", colRight, detY);
-    doc.setTextColor(50, 50, 50);
-    const validDate = new Date();
-    validDate.setDate(validDate.getDate() + 30);
-    doc.text(validDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), colRight + 80, detY);
-
-    y = Math.max(custY, detY) + 20;
-
-    doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b);
-    doc.setLineWidth(0.75);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 20;
-
-    const colDesc = margin;
-    const colQty = margin + contentWidth * 0.52;
-    const colPrice = margin + contentWidth * 0.68;
-    const colAmount = pageWidth - margin;
-    const rowH = 28;
-
-    doc.setFillColor(navy.r, navy.g, navy.b);
-    doc.rect(margin, y, contentWidth, rowH, "F");
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(255, 255, 255);
-    doc.text("DESCRIPTION", colDesc + 10, y + 18);
-    doc.text("QTY", colQty, y + 18, { align: "right" });
-    doc.text("UNIT PRICE", colPrice + 10, y + 18, { align: "right" });
-    doc.text("AMOUNT", colAmount - 10, y + 18, { align: "right" });
-    y += rowH;
-
-    doc.setFontSize(9);
-    items.forEach((item, i) => {
-      const qty = parseFloat(item.quantity) || 0;
-      const price = parseFloat(item.price) || 0;
-      const amount = qty * price;
-
-      if (y > pageHeight - 140) { doc.addPage(); y = margin; }
-
-      if (i % 2 === 0) {
         doc.setFillColor(grayBg.r, grayBg.g, grayBg.b);
-        doc.rect(margin, y, contentWidth, rowH, "F");
+        doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b);
+        doc.setLineWidth(0.5);
+        const noteLines = doc.splitTextToSize(notes, cw - 28);
+        const notesBoxH = 34 + noteLines.length * 12;
+        doc.roundedRect(m, y, cw, notesBoxH, 4, 4, "FD");
+
+        // Green left accent
+        doc.setFillColor(green.r, green.g, green.b);
+        doc.rect(m, y + 4, 3, notesBoxH - 8, "F");
+
+        doc.setFontSize(7.5);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(green.r, green.g, green.b);
+        doc.text("NOTES", m + 14, y + 16);
+
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(slate.r, slate.g, slate.b);
+        doc.setFontSize(8.5);
+        let ny = y + 30;
+        noteLines.forEach((line: string) => {
+          doc.text(line, m + 14, ny);
+          ny += 12;
+        });
+        y += notesBoxH + 16;
       }
 
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(50, 50, 50);
-      doc.text(item.description || "—", colDesc + 10, y + 18);
-      doc.setTextColor(slate.r, slate.g, slate.b);
-      doc.text(qty.toString(), colQty, y + 18, { align: "right" });
-      doc.text(`$${price.toFixed(2)}`, colPrice + 10, y + 18, { align: "right" });
+      // ===== TERMS & CONDITIONS =====
+      if (y > ph - 120) { doc.addPage(); y = m; }
+
+      doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b);
+      doc.setLineWidth(0.5);
+      doc.line(m, y, pw - m, y);
+      y += 16;
+
+      doc.setFontSize(7.5);
       doc.setFont("helvetica", "bold");
-      doc.setTextColor(50, 50, 50);
-      doc.text(`$${amount.toFixed(2)}`, colAmount - 10, y + 18, { align: "right" });
-      y += rowH;
-    });
+      doc.setTextColor(navy.r, navy.g, navy.b);
+      doc.text("TERMS & CONDITIONS", m, y);
+      y += 14;
 
-    doc.setDrawColor(navy.r, navy.g, navy.b);
-    doc.setLineWidth(1.5);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 10;
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(slate.r, slate.g, slate.b);
+      doc.setFontSize(8);
+      const terms = [
+        "This estimate is valid for 30 days from the date of issue.",
+        "Payment is due upon completion unless otherwise agreed in writing.",
+        "Prices are subject to change if scope of work changes.",
+      ];
+      terms.forEach((line) => { doc.text(`\u2022  ${line}`, m, y); y += 13; });
 
-    const totalsX = pageWidth - margin - 180;
-    const totalsValX = pageWidth - margin - 10;
+      // ===== FOOTER =====
+      const footY = ph - 44;
+      doc.setFillColor(navy.r, navy.g, navy.b);
+      doc.rect(0, footY, pw, 44, "F");
+      // Green accent line at top of footer
+      doc.setFillColor(green.r, green.g, green.b);
+      doc.rect(0, footY, pw, 2, "F");
 
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(slate.r, slate.g, slate.b);
-    doc.text("Subtotal", totalsX, y + 14);
-    doc.setTextColor(50, 50, 50);
-    doc.text(`$${total.toFixed(2)}`, totalsValX, y + 14, { align: "right" });
-    y += 22;
+      doc.setFontSize(8.5);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(200, 215, 235);
+      doc.text("This estimate is valid for 30 days  \u00B7  Powered by Preciso", pw / 2, footY + 26, { align: "center" });
 
-    doc.setTextColor(slate.r, slate.g, slate.b);
-    doc.text("Tax", totalsX, y + 14);
-    doc.setTextColor(50, 50, 50);
-    doc.text("—", totalsValX, y + 14, { align: "right" });
-    y += 22;
-
-    doc.setFillColor(navy.r, navy.g, navy.b);
-    doc.roundedRect(totalsX - 10, y, 200, 34, 4, 4, "F");
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(255, 255, 255);
-    doc.text("TOTAL DUE", totalsX + 4, y + 22);
-    doc.setFontSize(14);
-    doc.text(`$${total.toFixed(2)}`, totalsValX, y + 22, { align: "right" });
-    y += 52;
-
-    if (y > pageHeight - 130) { doc.addPage(); y = margin; }
-
-    doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b);
-    doc.setLineWidth(0.5);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 16;
-
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(navy.r, navy.g, navy.b);
-    doc.text("TERMS & CONDITIONS", margin, y);
-    y += 14;
-
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(slate.r, slate.g, slate.b);
-    doc.setFontSize(8);
-    const terms = [
-      "This estimate is valid for 30 days from the date of issue.",
-      "Payment is due upon completion unless otherwise agreed in writing.",
-      "Prices are subject to change if scope of work changes.",
-    ];
-    terms.forEach((line) => { doc.text(`•  ${line}`, margin, y); y += 13; });
-
-    doc.setFillColor(grayBg.r, grayBg.g, grayBg.b);
-    doc.rect(0, pageHeight - 40, pageWidth, 40, "F");
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(slate.r, slate.g, slate.b);
-    doc.text("Thank you for your business!", pageWidth / 2, pageHeight - 18, { align: "center" });
-
-    if (profile?.businessName) {
-      doc.setFontSize(7);
-      doc.setTextColor(180, 180, 180);
-      doc.text(`${profile.businessName}  •  Powered by Preciso AI`, pageWidth / 2, pageHeight - 8, { align: "center" });
+      doc.save(`${estimateNumber}.pdf`);
+    } catch {
+      setError("Could not save estimate. Please try again.");
+    } finally {
+      setSaving(false);
     }
-
-    doc.save(`${estimateNumber}.pdf`);
   }
 
-  const inputClass = "block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30";
+  const inputClass = "block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10";
+  const selectChevron = `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`;
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-lg px-4 py-8">
+      <div className="mx-auto max-w-[800px] px-4 py-8">
         {/* Business Header */}
         {profile && (
           <div className="mb-6 flex items-center gap-3">
@@ -405,44 +656,66 @@ function EstimatePageInner() {
               </p>
               <p className="truncate text-xs text-slate-500">
                 {profile.phone}
-                {profile.phone && profile.email ? " · " : ""}
+                {profile.phone && profile.email ? " \u00b7 " : ""}
                 {profile.email}
               </p>
             </div>
           </div>
         )}
 
-        {/* Estimate Info */}
-        <div className="flex items-baseline justify-between">
-          <h1 className="text-2xl font-bold text-white">
-            New Estimate
-          </h1>
-        </div>
-        <div className="mt-1 flex gap-4 text-sm text-slate-500">
-          <span>{estimateNumber}</span>
-          <span>{date}</span>
-        </div>
-
-        {/* Load Template */}
-        {templates.length > 0 && (
-          <div className="mt-4">
+        {/* Title Row: heading + template dropdown */}
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-white">{editId ? "Edit Estimate" : "New Estimate"}</h1>
+          {templates.length > 0 && (
             <select
+              ref={templateSelectRef}
+              defaultValue=""
               onChange={(e) => {
-                if (e.target.value) loadTemplate(e.target.value);
+                handleTemplateSelect(e.target.value);
                 e.target.value = "";
               }}
-              defaultValue=""
-              className="block w-full rounded-xl bg-[#151926] border border-white/[0.1] px-3 py-2.5 text-sm text-white focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+              className="rounded-lg bg-white/[0.05] border border-white/[0.1] px-3 py-1.5 text-xs text-slate-400 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 appearance-none"
+              style={{ backgroundImage: selectChevron, backgroundPosition: 'right 0.4rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em', paddingRight: '2rem' }}
             >
-              <option value="" disabled className="bg-[#151926] text-slate-400">
-                Load from template...
+              <option value="" disabled className="bg-[#0A0A0F] text-slate-500">
+                Use Template...
               </option>
               {templates.map((t) => (
-                <option key={t.id} value={t.id} className="bg-[#151926] text-white">
-                  {t.name}
+                <option key={t.id} value={t.id} className="bg-[#0A0A0F] text-white">
+                  {t.name}{t.jobTitle ? ` — ${t.jobTitle}` : ""}
                 </option>
               ))}
             </select>
+          )}
+        </div>
+        <div className="mt-1 flex items-center gap-4 text-sm text-slate-500">
+          <span>{estimateNumber}</span>
+          <span>{date}</span>
+          {usage && usage.plan === "free" && usage.estimateLimit && (
+            <span className="ml-auto rounded-full bg-white/[0.06] border border-white/[0.1] px-3 py-0.5 text-xs text-slate-400">
+              {usage.estimatesUsed} of {usage.estimateLimit} estimates used
+            </span>
+          )}
+        </div>
+
+        {/* Job Date */}
+        <div className="mt-3">
+          <label className="text-xs font-medium text-slate-500">Job Date (optional)</label>
+          <input
+            type="date"
+            value={jobDate}
+            onChange={(e) => setJobDate(e.target.value)}
+            className="mt-1 block w-full max-w-[220px] rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 [color-scheme:dark]"
+          />
+        </div>
+
+        {/* Saved badge */}
+        {savedId && (
+          <div className="mt-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-2.5 text-sm text-emerald-400 flex items-center gap-2">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+            Estimate saved{savedStatus === "draft" ? " as draft" : ""}
           </div>
         )}
 
@@ -452,14 +725,72 @@ function EstimatePageInner() {
             Customer Info
           </legend>
           <div className="mt-2 space-y-3">
-            <input
-              type="text"
-              name="name"
-              value={customer.name}
-              onChange={handleCustomerChange}
-              placeholder="Customer name"
-              className={inputClass}
-            />
+            {/* Client selector */}
+            {clients.length > 0 && (
+              <div className="relative" ref={clientDropdownRef}>
+                <div className="relative">
+                  <svg
+                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={clientSearch}
+                    onChange={(e) => {
+                      setClientSearch(e.target.value);
+                      setClientDropdownOpen(true);
+                    }}
+                    onFocus={() => setClientDropdownOpen(true)}
+                    placeholder="Select existing client..."
+                    className="block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] pl-10 pr-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
+                  />
+                </div>
+                {clientDropdownOpen && filteredClients.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full rounded-xl bg-[#141826] border border-white/[0.1] shadow-xl max-h-48 overflow-y-auto">
+                    {filteredClients.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => handleClientSelect(c)}
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-white/[0.06] first:rounded-t-xl last:rounded-b-xl transition-colors"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-medium text-white truncate">{c.name}</p>
+                          {(c.email || c.phone) && (
+                            <p className="text-xs text-slate-500 truncate">
+                              {[c.phone, c.email].filter(Boolean).join(" \u00b7 ")}
+                            </p>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {clientDropdownOpen && filteredClients.length === 0 && clientSearch && (
+                  <div className="absolute z-10 mt-1 w-full rounded-xl bg-[#141826] border border-white/[0.1] shadow-xl px-4 py-3">
+                    <p className="text-sm text-slate-500">No matching clients</p>
+                  </div>
+                )}
+                <p className="mt-1 text-xs text-slate-600">or enter new client details below</p>
+              </div>
+            )}
+            <div>
+              <input
+                type="text"
+                name="name"
+                value={customer.name}
+                onChange={handleCustomerChange}
+                placeholder="Customer name *"
+                className={`${inputClass} ${nameError ? "!border-red-500/50 !ring-1 !ring-red-500/30" : ""}`}
+              />
+              {nameError && (
+                <p className="mt-1 text-xs text-red-400">Customer name is required</p>
+              )}
+            </div>
             <input
               type="text"
               name="address"
@@ -508,59 +839,47 @@ function EstimatePageInner() {
                     <button
                       type="button"
                       onClick={() => removeItem(item.id)}
-                      className="text-xs text-rose-400 hover:text-rose-300 transition-colors"
+                      className="text-xs text-red-400 hover:text-red-300 transition-colors"
                     >
                       Remove
                     </button>
                   )}
                 </div>
-                <input
-                  type="text"
-                  value={item.description}
-                  onChange={(e) =>
-                    handleItemChange(item.id, "description", e.target.value)
-                  }
-                  placeholder="Description"
-                  className="mt-2 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
-                />
-                <div className="mt-2 grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-slate-500">
-                      Qty
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) =>
-                        handleItemChange(item.id, "quantity", e.target.value)
-                      }
-                      className="mt-0.5 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-slate-500">
-                      Price ($)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={item.price}
-                      onChange={(e) =>
-                        handleItemChange(item.id, "price", e.target.value)
-                      }
-                      placeholder="0.00"
-                      className="mt-0.5 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
-                    />
+                <div className="mt-2 flex flex-col gap-2 lg:flex-row lg:items-end lg:gap-3">
+                  <input
+                    type="text"
+                    value={item.description}
+                    onChange={(e) => handleItemChange(item.id, "description", e.target.value)}
+                    placeholder="Description"
+                    className="block w-full lg:flex-1 rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
+                  />
+                  <div className="grid grid-cols-2 gap-3 lg:flex lg:gap-3 lg:shrink-0">
+                    <div className="lg:w-20">
+                      <label className="text-xs text-slate-500">Qty</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(item.id, "quantity", e.target.value)}
+                        className="mt-0.5 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
+                      />
+                    </div>
+                    <div className="lg:w-40">
+                      <label className="text-xs text-slate-500">Price ($)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.price}
+                        onChange={(e) => handleItemChange(item.id, "price", e.target.value)}
+                        placeholder="0.00"
+                        className="mt-0.5 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="mt-1.5 text-right text-xs text-slate-500">
-                  Subtotal: $
-                  {(
-                    (parseFloat(item.quantity) || 0) *
-                    (parseFloat(item.price) || 0)
-                  ).toFixed(2)}
+                  Subtotal: ${((parseFloat(item.quantity) || 0) * (parseFloat(item.price) || 0)).toFixed(2)}
                 </div>
               </div>
             ))}
@@ -571,31 +890,95 @@ function EstimatePageInner() {
             onClick={addItem}
             className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/[0.1] py-2.5 text-sm font-medium text-slate-400 transition-all duration-200 hover:border-white/[0.2] hover:text-white"
           >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             Add Line Item
           </button>
         </fieldset>
 
+        {/* Notes */}
+        <fieldset className="mt-6">
+          <legend className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Notes
+          </legend>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Add notes, terms, or special instructions..."
+            rows={3}
+            className="mt-2 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 resize-none"
+          />
+        </fieldset>
+
+        {/* Total */}
+        <div className="mt-6 flex items-baseline justify-between rounded-2xl bg-gradient-to-r from-emerald-600/50 to-emerald-600/30 px-4 py-3 shadow-lg shadow-emerald-500/20">
+          <span className="text-sm font-medium text-white">Total</span>
+          <span className="text-xl font-bold text-white">${total.toFixed(2)}</span>
+        </div>
+
+        {/* Action Buttons — 3 in a row */}
+        <div className="mt-4 grid grid-cols-3 gap-3">
+          <button
+            type="button"
+            onClick={handleSaveDraft}
+            disabled={saving || (!!savedId && !editId)}
+            className="rounded-xl bg-white/[0.06] py-3 text-sm font-medium text-slate-400 transition-all duration-200 hover:bg-white/[0.1] hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {saving && !showSendModal && (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white" />
+            )}
+            {editId ? "Save Changes" : "Save Draft"}
+          </button>
+          <button
+            type="button"
+            onClick={generatePDF}
+            disabled={saving}
+            className="rounded-xl bg-white/[0.06] border border-white/[0.1] py-3 text-sm font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            Download PDF
+          </button>
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={saving}
+            className="rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {saving && (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white" />
+            )}
+            Send to Customer
+          </button>
+        </div>
+
+        {/* Error Banner */}
+        {error && (
+          <div className="mt-3 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
+            {error}
+          </div>
+        )}
+
+        {/* Template Saved Banner */}
+        {templateSaved && (
+          <div className="mt-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-2.5 text-sm text-emerald-400 flex items-center gap-2">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+            Template saved
+          </div>
+        )}
+
         {/* Save as Template */}
-        <div className="mt-4">
-          {!showTemplateSave ? (
+        <div className="mt-4 border-t border-white/[0.06] pt-4">
+          {!showSaveTemplate ? (
             <button
               type="button"
-              onClick={() => setShowTemplateSave(true)}
-              className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+              onClick={() => setShowSaveTemplate(true)}
+              className="flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-slate-300"
             >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+              </svg>
               Save as Template
             </button>
           ) : (
@@ -605,76 +988,108 @@ function EstimatePageInner() {
                 value={templateName}
                 onChange={(e) => setTemplateName(e.target.value)}
                 placeholder="Template name"
-                className="block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Enter") handleSaveAsTemplate(); if (e.key === "Escape") { setShowSaveTemplate(false); setTemplateName(""); } }}
+                className="block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
               />
               <button
                 type="button"
-                onClick={saveAsTemplate}
-                className="shrink-0 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
+                onClick={handleSaveAsTemplate}
+                disabled={savingTemplate || !templateName.trim()}
+                className="shrink-0 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Save
+                {savingTemplate ? "Saving..." : "Save"}
               </button>
               <button
                 type="button"
-                onClick={() => { setShowTemplateSave(false); setTemplateName(""); }}
-                className="shrink-0 rounded-xl bg-white/[0.06] border border-white/[0.1] px-3 py-2 text-sm text-slate-400 transition-all hover:bg-white/[0.1]"
+                onClick={() => { setShowSaveTemplate(false); setTemplateName(""); }}
+                className="shrink-0 rounded-xl bg-white/[0.06] px-3 py-2.5 text-sm text-slate-400 transition-all hover:bg-white/[0.1] hover:text-white"
               >
                 Cancel
               </button>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Total */}
-        <div className="mt-6 flex items-baseline justify-between rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-3 shadow-lg shadow-indigo-500/20">
-          <span className="text-sm font-medium text-indigo-200">Total</span>
-          <span className="text-xl font-bold text-white">
-            ${total.toFixed(2)}
-          </span>
-        </div>
+      {/* Send Modal */}
+      {showSendModal && shareLink && (
+        <SendModal
+          type="estimate"
+          id={shareLink.split("/view/")[1] || ""}
+          customerName={customer.name}
+          customerPhone={customer.phone}
+          customerEmail={customer.email}
+          businessName={profile?.businessName}
+          onClose={() => setShowSendModal(false)}
+        />
+      )}
 
-        {/* Action Buttons */}
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={generatePDF}
-            className="rounded-xl bg-white/[0.06] border border-white/[0.1] py-3 text-sm font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1]"
-          >
-            Download PDF
-          </button>
-          <button
-            type="button"
-            onClick={handleSend}
-            className="rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
-          >
-            Send to Customer
-          </button>
-        </div>
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowUpgradeModal(false)} />
+          <div className="relative w-full max-w-lg rounded-2xl bg-[#12131A] border border-white/[0.1] p-8 shadow-2xl mx-4">
 
-        {/* Share Link */}
-        {shareLink && (
-          <div className="mt-4 rounded-2xl bg-white/[0.05] border border-white/[0.08] p-4">
-            <p className="text-sm font-medium text-slate-300">
-              Share this link with your customer:
-            </p>
-            <div className="mt-2 flex gap-2">
-              <input
-                type="text"
-                readOnly
-                value={shareLink}
-                className="block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-slate-300"
-              />
+            <div className="text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
+                <svg className="h-6 w-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-white">
+                You&apos;ve reached your 3 free estimates this month
+              </h3>
+              <p className="mt-2 text-sm text-slate-400">
+                Upgrade to Pro for unlimited estimates, invoicing, and payment tracking.
+              </p>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <button
                 type="button"
-                onClick={handleCopy}
-                className="shrink-0 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
+                onClick={async () => {
+                  const res = await fetch("/api/stripe/checkout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ type: "subscription", interval: "monthly" }),
+                  });
+                  const data = await res.json();
+                  if (data.url) window.location.href = data.url;
+                }}
+                className="rounded-xl bg-white/[0.08] border border-white/[0.1] py-3 text-center text-sm font-medium text-white transition-all hover:bg-white/[0.12]"
               >
-                {copied ? "Copied!" : "Copy"}
+                <span className="block text-lg font-bold">$9.99</span>
+                <span className="text-xs text-slate-400">per month</span>
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const res = await fetch("/api/stripe/checkout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ type: "subscription", interval: "annual" }),
+                  });
+                  const data = await res.json();
+                  if (data.url) window.location.href = data.url;
+                }}
+                className="rounded-xl bg-emerald-600 py-3 text-center text-sm font-medium text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500"
+              >
+                <span className="block text-lg font-bold">$79.99</span>
+                <span className="text-xs text-emerald-200">per year — save 33%</span>
               </button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setShowUpgradeModal(false)}
+              className="mt-3 w-full py-2 text-center text-xs text-slate-500 hover:text-slate-400 transition-colors"
+            >
+              Maybe later
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </AppShell>
   );
 }

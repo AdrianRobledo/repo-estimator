@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthUserId } from "@/lib/api-auth";
+import { getAuthUserId, isAdmin } from "@/lib/api-auth";
 
 export async function GET() {
   const userId = await getAuthUserId();
@@ -48,6 +48,18 @@ export async function GET() {
 export async function POST(req: Request) {
   const userId = await getAuthUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Pro-only check (admin bypasses)
+  const admin = await isAdmin();
+  if (!admin) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { plan: true },
+    });
+    if (user?.plan !== "pro") {
+      return NextResponse.json({ error: "Pro plan required" }, { status: 403 });
+    }
+  }
 
   const { estimateId, invoiceNumber, date, dueDate } = await req.json();
 

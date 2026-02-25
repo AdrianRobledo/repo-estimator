@@ -16,7 +16,10 @@ export async function GET(
   return NextResponse.json({
     id: t.id,
     name: t.name,
+    jobTitle: t.jobTitle,
     items: JSON.parse(t.items),
+    clientMessage: t.clientMessage,
+    disclaimer: t.disclaimer,
   });
 }
 
@@ -38,6 +41,9 @@ export async function PUT(
     data: {
       ...(body.name && { name: body.name }),
       ...(body.items && { items: JSON.stringify(body.items) }),
+      ...(body.jobTitle !== undefined && { jobTitle: body.jobTitle || null }),
+      ...(body.clientMessage !== undefined && { clientMessage: body.clientMessage || null }),
+      ...(body.disclaimer !== undefined && { disclaimer: body.disclaimer || null }),
     },
   });
 

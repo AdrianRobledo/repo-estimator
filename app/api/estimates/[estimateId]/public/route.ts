@@ -8,7 +8,10 @@ export async function GET(
   const { estimateId } = await params;
   const est = await prisma.estimate.findUnique({
     where: { id: estimateId },
-    include: { user: { select: { businessName: true, ownerName: true, phone: true, businessEmail: true, logo: true } } },
+    include: {
+      user: { select: { businessName: true, ownerName: true, phone: true, businessEmail: true, businessAddress: true, logo: true } },
+      invoice: { select: { id: true } },
+    },
   });
 
   if (!est) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -17,6 +20,7 @@ export async function GET(
     id: est.id,
     estimateNumber: est.estimateNumber,
     date: est.date,
+    jobDate: est.jobDate || undefined,
     status: est.status,
     customer: {
       name: est.customerName || "",
@@ -31,7 +35,9 @@ export async function GET(
       ownerName: est.user.ownerName || "",
       phone: est.user.phone || "",
       email: est.user.businessEmail || "",
+      address: est.user.businessAddress || "",
       logo: est.user.logo || null,
     },
+    invoiceId: est.invoice?.id || null,
   });
 }

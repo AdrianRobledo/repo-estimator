@@ -8,6 +8,7 @@ export default function SetupPage() {
     businessName: "",
     ownerName: "",
     phone: "",
+    address: "",
     email: "",
   });
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -24,6 +25,7 @@ export default function SetupPage() {
             businessName: data.businessName || "",
             ownerName: data.ownerName || "",
             phone: data.phone || "",
+            address: data.address || "",
             email: data.email || "",
           });
           if (data.logo) setLogoPreview(data.logo);
@@ -58,13 +60,13 @@ export default function SetupPage() {
     setSaved(true);
   }
 
-  const inputClass = "mt-1 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30";
+  const inputClass = "mt-1 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10";
 
   if (loading) {
     return (
       <AppShell>
         <div className="flex items-center justify-center py-20">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-indigo-500" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-white" />
         </div>
       </AppShell>
     );
@@ -72,7 +74,7 @@ export default function SetupPage() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-lg px-4 py-8">
+      <div className="mx-auto max-w-2xl px-4 py-8">
         <h1 className="text-2xl font-bold text-white">
           Business Profile
         </h1>
@@ -167,6 +169,20 @@ export default function SetupPage() {
 
           <div>
             <label className="block text-sm font-medium text-slate-400">
+              Business Address
+            </label>
+            <input
+              type="text"
+              name="address"
+              value={form.address}
+              onChange={handleChange}
+              placeholder="123 Main St, City, ST 12345"
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-400">
               Email
             </label>
             <input
@@ -182,7 +198,7 @@ export default function SetupPage() {
           {/* Save Button */}
           <button
             onClick={handleSave}
-            className="mt-4 w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500"
+            className="mt-4 w-full rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition-all hover:bg-emerald-500"
           >
             Save Profile
           </button>

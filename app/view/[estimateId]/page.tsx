@@ -9,6 +9,7 @@ export default function ViewEstimatePage() {
   const [estimate, setEstimate] = useState<EstimateData | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [responded, setResponded] = useState<"approved" | "declined" | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetch(`/api/estimates/${params.estimateId}/public`)
@@ -26,26 +27,23 @@ export default function ViewEstimatePage() {
   }, [params.estimateId]);
 
   async function handleResponse(status: "approved" | "declined") {
-    if (!estimate) return;
+    if (!estimate || submitting) return;
+    setSubmitting(true);
     await fetch(`/api/estimates/${estimate.id}/respond`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
     setResponded(status);
+    setSubmitting(false);
   }
 
   if (notFound) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0B0F1A]">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="px-6 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.05]">
-            <svg className="h-6 w-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <p className="text-lg font-semibold text-white">Estimate not found</p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="text-lg font-semibold text-gray-800">Estimate not found</p>
+          <p className="mt-1 text-sm text-gray-500">
             This link may be invalid or the estimate is no longer available.
           </p>
         </div>
@@ -55,8 +53,8 @@ export default function ViewEstimatePage() {
 
   if (!estimate) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0B0F1A]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-indigo-500" />
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-gray-600" />
       </div>
     );
   }
@@ -64,169 +62,253 @@ export default function ViewEstimatePage() {
   const profile = estimate.profile;
 
   return (
-    <div className="min-h-screen bg-[#0B0F1A]">
-      {/* Gradient header */}
-      <div className="bg-gradient-to-br from-[#0B0F1A] via-indigo-950 to-[#0B0F1A]">
-        <div className="mx-auto max-w-lg px-5 pb-16 pt-8">
-          <div className="flex items-center gap-3.5">
-            {profile?.logo && (
-              <img
-                src={profile.logo}
-                alt="Logo"
-                className="h-12 w-12 rounded-xl border-2 border-white/[0.1] object-cover"
-              />
-            )}
-            <div className="min-w-0">
-              <p className="truncate text-lg font-bold text-white">
-                {profile?.businessName}
-              </p>
-              <p className="truncate text-sm text-slate-400">
-                {[profile?.phone, profile?.email].filter(Boolean).join(" · ")}
-              </p>
+    <div className="min-h-screen bg-gray-100">
+      <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
+        {/* Document card */}
+        <div className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200">
+
+          {/* Business header */}
+          <div className="border-b border-gray-200 px-6 py-6 sm:px-8">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                {profile?.logo && (
+                  <img
+                    src={profile.logo}
+                    alt={profile.businessName || "Logo"}
+                    className="h-14 w-14 rounded-lg object-cover"
+                  />
+                )}
+                <div>
+                  <p className="text-xl font-bold text-gray-900">
+                    {profile?.businessName}
+                  </p>
+                  {profile?.ownerName && (
+                    <p className="text-sm text-gray-500">{profile.ownerName}</p>
+                  )}
+                </div>
+              </div>
+              <div className="text-right text-sm text-gray-500">
+                {profile?.address && <p>{profile.address}</p>}
+                {profile?.phone && <p>{profile.phone}</p>}
+                {profile?.email && <p>{profile.email}</p>}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Main card */}
-      <div className="mx-auto -mt-8 max-w-lg px-4 pb-10">
-        <div className="overflow-hidden rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] shadow-lg shadow-black/20">
-          <div className="flex items-center justify-between px-5 pt-5 pb-4">
-            <div>
-              <h1 className="text-xl font-bold text-white">Estimate</h1>
-              <p className="mt-0.5 text-sm text-slate-500">
-                {estimate.estimateNumber} &middot; {estimate.date}
-              </p>
+          {/* ESTIMATE title row */}
+          <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 sm:px-8">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                ESTIMATE
+              </h1>
+              <div className="text-right">
+                <p className="text-sm text-gray-500">
+                  {estimate.estimateNumber}
+                </p>
+                <p className="text-sm text-gray-500">{estimate.date}</p>
+              </div>
             </div>
-            {responded && (
-              <span className="flex items-center gap-1.5">
-                <span className={`h-2 w-2 rounded-full ${responded === "approved" ? "bg-emerald-400" : "bg-rose-400"}`} />
-                <span className={`text-xs font-semibold ${responded === "approved" ? "text-emerald-400" : "text-rose-400"}`}>
-                  {responded === "approved" ? "Approved" : "Declined"}
-                </span>
-              </span>
-            )}
           </div>
 
-          <div className="mx-5 border-t border-white/[0.08]" />
-
+          {/* Prepared For */}
           {(estimate.customer.name || estimate.customer.address) && (
-            <div className="px-5 pt-4 pb-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                Prepared for
+            <div className="border-b border-gray-200 px-6 py-5 sm:px-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                Prepared For
               </p>
-              <div className="mt-2 space-y-0.5">
+              <div className="mt-2">
                 {estimate.customer.name && (
-                  <p className="text-sm font-semibold text-white">{estimate.customer.name}</p>
+                  <p className="text-base font-semibold text-gray-900">
+                    {estimate.customer.name}
+                  </p>
                 )}
                 {estimate.customer.address && (
-                  <p className="text-sm text-slate-400">{estimate.customer.address}</p>
+                  <p className="text-sm text-gray-600">
+                    {estimate.customer.address}
+                  </p>
                 )}
                 {(estimate.customer.phone || estimate.customer.email) && (
-                  <p className="text-sm text-slate-500">
-                    {[estimate.customer.phone, estimate.customer.email].filter(Boolean).join(" · ")}
+                  <p className="mt-1 text-sm text-gray-500">
+                    {[estimate.customer.phone, estimate.customer.email]
+                      .filter(Boolean)
+                      .join(" \u00B7 ")}
                   </p>
                 )}
               </div>
             </div>
           )}
 
-          {/* Line items */}
-          <div className="mt-1">
-            <div className="grid grid-cols-[1fr_3rem_5rem] gap-2 bg-white/[0.03] px-5 py-2.5">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Item</span>
-              <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-500">Qty</span>
-              <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-500">Amount</span>
+          {/* Line items table */}
+          <div className="px-6 sm:px-8">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="py-3 pr-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Description
+                  </th>
+                  <th className="w-16 py-3 px-2 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Qty
+                  </th>
+                  <th className="w-24 py-3 px-2 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Price
+                  </th>
+                  <th className="w-24 py-3 pl-2 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Amount
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {estimate.items.map((item, i) => {
+                  const qty = parseFloat(item.quantity) || 0;
+                  const price = parseFloat(item.price) || 0;
+                  const amount = qty * price;
+                  return (
+                    <tr
+                      key={item.id}
+                      className={
+                        i < estimate.items.length - 1
+                          ? "border-b border-gray-100"
+                          : ""
+                      }
+                    >
+                      <td className="py-3 pr-3 text-sm text-gray-800">
+                        {item.description || "\u2014"}
+                      </td>
+                      <td className="py-3 px-2 text-right text-sm text-gray-600">
+                        {qty}
+                      </td>
+                      <td className="py-3 px-2 text-right text-sm text-gray-600">
+                        ${price.toFixed(2)}
+                      </td>
+                      <td className="py-3 pl-2 text-right text-sm font-medium text-gray-900">
+                        ${amount.toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Total */}
+          <div className="border-t-2 border-gray-900 mx-6 sm:mx-8" />
+          <div className="flex items-center justify-between px-6 py-5 sm:px-8">
+            <span className="text-base font-semibold text-gray-700">
+              Total Due
+            </span>
+            <span className="text-2xl font-bold text-gray-900">
+              ${estimate.total.toFixed(2)}
+            </span>
+          </div>
+
+          {/* Estimate valid note */}
+          {!responded && (
+            <div className="border-t border-gray-100 px-6 py-3 sm:px-8">
+              <p className="text-center text-xs text-gray-400">
+                This estimate is valid for 30 days from the date of issue.
+              </p>
             </div>
-
-            {estimate.items.map((item, i) => {
-              const qty = parseFloat(item.quantity) || 0;
-              const price = parseFloat(item.price) || 0;
-              const amount = qty * price;
-
-              return (
-                <div
-                  key={item.id}
-                  className={`grid grid-cols-[1fr_3rem_5rem] gap-2 px-5 py-3 ${
-                    i % 2 === 0 ? "" : "bg-white/[0.02]"
-                  } ${i < estimate.items.length - 1 ? "border-b border-white/[0.06]" : ""}`}
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-white">{item.description || "—"}</p>
-                    <p className="text-xs text-slate-500">${price.toFixed(2)} ea.</p>
-                  </div>
-                  <span className="self-center text-right text-sm text-slate-400">{qty}</span>
-                  <span className="self-center text-right text-sm font-semibold text-white">${amount.toFixed(2)}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mx-5 mt-2 mb-5 flex items-center justify-between rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-5 py-4 shadow-lg shadow-indigo-500/20">
-            <span className="text-sm font-medium text-indigo-200">Total Due</span>
-            <span className="text-2xl font-bold tracking-tight text-white">${estimate.total.toFixed(2)}</span>
-          </div>
+          )}
         </div>
 
-        {/* Approve / Decline */}
+        {/* Action area — below the document card */}
         {!responded ? (
-          <div className="mt-5 space-y-3 px-1">
+          <div className="mt-6 space-y-3">
             <button
               type="button"
               onClick={() => handleResponse("approved")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-500/30 active:scale-[0.98]"
+              disabled={submitting}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 py-3.5 text-base font-semibold text-white transition-colors hover:bg-green-700 active:bg-green-800 disabled:opacity-60"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               Approve Estimate
             </button>
             <button
               type="button"
               onClick={() => handleResponse("declined")}
-              className="w-full rounded-xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] py-4 text-base font-semibold text-slate-400 transition-all hover:bg-white/[0.08] hover:text-white active:scale-[0.98]"
+              disabled={submitting}
+              className="w-full rounded-lg border border-gray-300 bg-white py-3.5 text-base font-semibold text-gray-600 transition-colors hover:bg-gray-50 active:bg-gray-100 disabled:opacity-60"
             >
               Decline
             </button>
-            <p className="text-center text-xs text-slate-500">This estimate is valid for 30 days.</p>
           </div>
         ) : (
-          <div className="mt-5 px-1">
-            <div
-              className={`rounded-2xl p-6 text-center backdrop-blur-xl border ${
-                responded === "approved"
-                  ? "bg-emerald-500/10 border-emerald-500/20"
-                  : "bg-white/[0.05] border-white/[0.08]"
-              }`}
-            >
-              {responded === "approved" ? (
-                <>
-                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15">
-                    <svg className="h-6 w-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <p className="text-lg font-bold text-emerald-400">Estimate Approved</p>
-                  <p className="mt-1 text-sm text-emerald-400/70">
-                    Thank you! {profile?.businessName ? `${profile.businessName} has` : "We've"} been notified and will be in touch.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/[0.05]">
-                    <svg className="h-6 w-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </div>
-                  <p className="text-lg font-bold text-white">Estimate Declined</p>
-                  <p className="mt-1 text-sm text-slate-500">No worries at all. Feel free to reach out if anything changes.</p>
-                </>
-              )}
-            </div>
+          <div className="mt-6">
+            {responded === "approved" ? (
+              <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                  <svg
+                    className="h-6 w-6 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <p className="text-lg font-bold text-green-800">
+                  Estimate Approved!
+                </p>
+                <p className="mt-1 text-sm text-green-700">
+                  {profile?.businessName || "The contractor"} has been notified
+                  and will be in touch to schedule your work.
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                  <svg
+                    className="h-6 w-6 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </div>
+                <p className="text-lg font-bold text-gray-800">
+                  Estimate Declined
+                </p>
+                <p className="mt-1 text-sm text-gray-500">
+                  {profile?.businessName || "The contractor"} has been notified.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
-        <p className="mt-8 text-center text-xs text-slate-500">Powered by Preciso AI</p>
+        {/* Footer */}
+        <div className="mt-8 text-center">
+          {(profile?.phone || profile?.email) && (
+            <p className="text-xs text-gray-400">
+              Questions? Contact{" "}
+              {[profile?.phone, profile?.email].filter(Boolean).join(" or ")}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-300">Powered by Preciso</p>
+        </div>
       </div>
     </div>
   );
