@@ -56,12 +56,22 @@ function EstimatePageInner() {
   const [usage, setUsage] = useState<{ plan: string; estimatesUsed: number; estimateLimit: number | null } | null>(null);
   const [jobDate, setJobDate] = useState("");
   const [nameError, setNameError] = useState(false);
+  const [emailError, setEmailError] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateSaved, setTemplateSaved] = useState(false);
 
   const [showCongratsToast, setShowCongratsToast] = useState(false);
+
+  function formatPhone(value: string): string {
+    const hasPlus = value.startsWith("+");
+    const digits = value.replace(/\D/g, "");
+    if (hasPlus || digits.length > 10) return hasPlus ? "+" + digits : digits;
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  }
 
   const [customer, setCustomer] = useState({
     name: "",
@@ -162,9 +172,12 @@ function EstimatePageInner() {
   }
 
   function handleCustomerChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setCustomer({ ...customer, [e.target.name]: e.target.value });
+    let value = e.target.value;
+    if (e.target.name === "phone") value = formatPhone(value);
+    if (e.target.name === "email") setEmailError(false);
+    setCustomer({ ...customer, [e.target.name]: value });
     setSelectedClientId(null);
-    if (e.target.name === "name" && e.target.value.trim()) setNameError(false);
+    if (e.target.name === "name" && value.trim()) setNameError(false);
   }
 
   function handleClientSelect(client: ClientData) {
@@ -190,6 +203,8 @@ function EstimatePageInner() {
     : clients;
 
   function handleItemChange(id: number, field: keyof LineItem, value: string) {
+    if (field === "quantity") value = value.replace(/\D/g, "");
+    if (field === "price") value = value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1");
     setItems(items.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
   }
 
@@ -306,6 +321,7 @@ function EstimatePageInner() {
 
   async function handleSaveDraft() {
     if (!customer.name.trim()) { setNameError(true); return; }
+    if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) { setEmailError(true); return; }
     setNameError(false);
     setSaving(true);
     setError(null);
@@ -322,6 +338,7 @@ function EstimatePageInner() {
 
   async function handleSend() {
     if (!customer.name.trim()) { setNameError(true); return; }
+    if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) { setEmailError(true); return; }
     setNameError(false);
     setSaving(true);
     setError(null);
@@ -341,6 +358,7 @@ function EstimatePageInner() {
 
   async function generatePDF() {
     if (!customer.name.trim()) { setNameError(true); return; }
+    if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) { setEmailError(true); return; }
     setNameError(false);
     setSaving(true);
     setError(null);
@@ -820,20 +838,26 @@ function EstimatePageInner() {
             <div className="grid grid-cols-2 gap-3">
               <input
                 type="tel"
+                inputMode="tel"
                 name="phone"
                 value={customer.phone}
                 onChange={handleCustomerChange}
-                placeholder="Phone"
+                placeholder="(555) 123-4567"
                 className={inputClass}
               />
-              <input
-                type="email"
-                name="email"
-                value={customer.email}
-                onChange={handleCustomerChange}
-                placeholder="Email"
-                className={inputClass}
-              />
+              <div>
+                <input
+                  type="email"
+                  name="email"
+                  value={customer.email}
+                  onChange={handleCustomerChange}
+                  placeholder="Email"
+                  className={`${inputClass} ${emailError ? "!border-red-500/50 !ring-1 !ring-red-500/30" : ""}`}
+                />
+                {emailError && (
+                  <p className="mt-1 text-xs text-red-400">Please enter a valid email</p>
+                )}
+              </div>
             </div>
           </div>
         </fieldset>
@@ -875,8 +899,8 @@ function EstimatePageInner() {
                     <div className="lg:w-20">
                       <label className="text-xs text-slate-500">Qty</label>
                       <input
-                        type="number"
-                        min="1"
+                        type="text"
+                        inputMode="numeric"
                         value={item.quantity}
                         onChange={(e) => handleItemChange(item.id, "quantity", e.target.value)}
                         className="mt-0.5 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
@@ -885,9 +909,8 @@ function EstimatePageInner() {
                     <div className="lg:w-40">
                       <label className="text-xs text-slate-500">Price ($)</label>
                       <input
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
                         value={item.price}
                         onChange={(e) => handleItemChange(item.id, "price", e.target.value)}
                         placeholder="0.00"

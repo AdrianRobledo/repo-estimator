@@ -47,6 +47,16 @@ export default function ClientsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  const [emailError, setEmailError] = useState(false);
+
+  function formatPhone(value: string): string {
+    const hasPlus = value.startsWith("+");
+    const digits = value.replace(/\D/g, "");
+    if (hasPlus || digits.length > 10) return hasPlus ? "+" + digits : digits;
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  }
 
   // Detail view state
   const [clientEstimates, setClientEstimates] = useState<EstimateData[]>([]);
@@ -86,6 +96,7 @@ export default function ClientsPage() {
     setPhone("");
     setAddress("");
     setEditingId(null);
+    setEmailError(false);
   }
 
   function startCreate() {
@@ -138,6 +149,7 @@ export default function ClientsPage() {
 
   async function handleSave() {
     if (!name.trim()) return;
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setEmailError(true); return; }
     setSaving(true);
 
     const payload = { name, email, phone, address };
@@ -483,18 +495,24 @@ export default function ClientsPage() {
                 placeholder="Client name"
                 className={inputClass}
               />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                className={inputClass}
-              />
+              <div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setEmailError(false); }}
+                  placeholder="Email"
+                  className={`${inputClass} ${emailError ? "!border-red-500/50 !ring-1 !ring-red-500/30" : ""}`}
+                />
+                {emailError && (
+                  <p className="mt-1 text-xs text-red-400">Please enter a valid email</p>
+                )}
+              </div>
               <input
                 type="tel"
+                inputMode="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Phone"
+                onChange={(e) => setPhone(formatPhone(e.target.value))}
+                placeholder="(555) 123-4567"
                 className={inputClass}
               />
               <input

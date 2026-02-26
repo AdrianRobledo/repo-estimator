@@ -25,6 +25,15 @@ export default function SendModal({
   const [phone, setPhone] = useState(customerPhone || "");
   const [email, setEmail] = useState(customerEmail || "");
 
+  function formatPhone(value: string): string {
+    const hasPlus = value.startsWith("+");
+    const digits = value.replace(/\D/g, "");
+    if (hasPlus || digits.length > 10) return hasPlus ? "+" + digits : digits;
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  }
+
   const label = type === "estimate" ? "Estimate" : "Invoice";
   const path = type === "estimate" ? `/view/${id}` : `/invoice/${id}`;
   const link = typeof window !== "undefined" ? `${window.location.origin}${path}` : path;
@@ -119,9 +128,10 @@ export default function SendModal({
               <div className="mt-2 flex gap-2">
                 <input
                   type="tel"
+                  inputMode="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Enter phone number"
+                  onChange={(e) => setPhone(formatPhone(e.target.value))}
+                  placeholder="(555) 123-4567"
                   className="block w-full rounded-lg bg-white/[0.05] border border-white/[0.1] px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none"
                 />
                 <a

@@ -14,6 +14,16 @@ export default function SetupPage() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [emailError, setEmailError] = useState(false);
+
+  function formatPhone(value: string): string {
+    const hasPlus = value.startsWith("+");
+    const digits = value.replace(/\D/g, "");
+    if (hasPlus || digits.length > 10) return hasPlus ? "+" + digits : digits;
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  }
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -35,7 +45,10 @@ export default function SetupPage() {
   }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    let value = e.target.value;
+    if (e.target.name === "phone") value = formatPhone(value);
+    if (e.target.name === "email") setEmailError(false);
+    setForm({ ...form, [e.target.name]: value });
     setSaved(false);
   }
 
@@ -52,6 +65,10 @@ export default function SetupPage() {
   }
 
   async function handleSave() {
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setEmailError(true);
+      return;
+    }
     await fetch("/api/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -159,6 +176,7 @@ export default function SetupPage() {
             </label>
             <input
               type="tel"
+              inputMode="tel"
               name="phone"
               value={form.phone}
               onChange={handleChange}
@@ -191,8 +209,11 @@ export default function SetupPage() {
               value={form.email}
               onChange={handleChange}
               placeholder="mike@example.com"
-              className={inputClass}
+              className={`${inputClass} ${emailError ? "!border-red-500/50 !ring-1 !ring-red-500/30" : ""}`}
             />
+            {emailError && (
+              <p className="mt-1 text-xs text-red-400">Please enter a valid email</p>
+            )}
           </div>
 
           {/* Save Button */}
