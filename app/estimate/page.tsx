@@ -390,17 +390,6 @@ function EstimatePageInner() {
         if (profile.email) doc.text(profile.email, logoEndX, y + 40);
         if (profile.address) doc.text(profile.address, logoEndX, y + 52);
 
-        // Right-aligned contact on second column
-        const rightContact = [profile.phone, profile.email].filter(Boolean);
-        if (rightContact.length) {
-          doc.setFontSize(8.5);
-          doc.setTextColor(lightSlate.r, lightSlate.g, lightSlate.b);
-          let ry = y + 12;
-          rightContact.forEach((line) => {
-            doc.text(line!, pw - m, ry, { align: "right" });
-            ry += 12;
-          });
-        }
       }
 
       y += 56;
@@ -408,45 +397,54 @@ function EstimatePageInner() {
       // ===== GREEN ACCENT BAR =====
       doc.setFillColor(green.r, green.g, green.b);
       doc.rect(0, y, pw, 4, "F");
-      y += 20;
+      y += 40;
 
       // ===== ESTIMATE TITLE ROW =====
       doc.setFont("helvetica", "bold");
       doc.setFontSize(28);
       doc.setTextColor(navy.r, navy.g, navy.b);
-      doc.text("ESTIMATE", m, y + 4);
+      doc.text("ESTIMATE", m, y);
 
-      // Right side: number + date
+      // Right side: number + date (labels further left to avoid overlap)
+      const metaLabelX = pw - m - 190;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(slate.r, slate.g, slate.b);
-      doc.text("Estimate No.", pw - m - 120, y - 8);
+      doc.text("Estimate No.", metaLabelX, y - 10);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(dark.r, dark.g, dark.b);
-      doc.text(estimateNumber, pw - m, y - 8, { align: "right" });
+      doc.text(estimateNumber, pw - m, y - 10, { align: "right" });
 
       doc.setFont("helvetica", "normal");
       doc.setTextColor(slate.r, slate.g, slate.b);
-      doc.text("Date", pw - m - 120, y + 6);
+      doc.text("Date", metaLabelX, y + 6);
       doc.setTextColor(dark.r, dark.g, dark.b);
       doc.text(date, pw - m, y + 6, { align: "right" });
 
       if (jobDate) {
         doc.setTextColor(slate.r, slate.g, slate.b);
-        doc.text("Scheduled Date", pw - m - 120, y + 20);
+        doc.text("Scheduled Date", metaLabelX, y + 22);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(green.r, green.g, green.b);
         const jd = new Date(jobDate + "T00:00:00");
-        doc.text(jd.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), pw - m, y + 20, { align: "right" });
+        doc.text(jd.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), pw - m, y + 22, { align: "right" });
       }
 
-      y += 40;
+      y += jobDate ? 48 : 36;
 
       // ===== PREPARED FOR BOX =====
+      // Calculate dynamic box height based on content
+      doc.setFontSize(10);
+      let custContentH = 0;
+      const addrWrapped = customer.address ? doc.splitTextToSize(customer.address, cw - 28) : [];
+      if (customer.name) custContentH += 14;
+      custContentH += addrWrapped.length * 14;
+      if (customer.phone || customer.email) custContentH += 14;
+      const boxH = Math.max(60, 36 + custContentH + 8);
+
       doc.setFillColor(grayBg.r, grayBg.g, grayBg.b);
       doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b);
       doc.setLineWidth(0.75);
-      const boxH = 80;
       doc.roundedRect(m, y, cw, boxH, 6, 6, "FD");
 
       doc.setFontSize(7.5);
@@ -464,10 +462,12 @@ function EstimatePageInner() {
         doc.setFont("helvetica", "normal");
         cy += 14;
       }
-      if (customer.address) {
+      if (addrWrapped.length > 0) {
         doc.setTextColor(slate.r, slate.g, slate.b);
-        doc.text(customer.address, m + 14, cy);
-        cy += 14;
+        addrWrapped.forEach((line: string) => {
+          doc.text(line, m + 14, cy);
+          cy += 14;
+        });
       }
       const custContact = [customer.phone, customer.email].filter(Boolean).join("  \u00B7  ");
       if (custContact) {
@@ -503,32 +503,42 @@ function EstimatePageInner() {
 
       // Table rows
       doc.setFontSize(9);
+      const descMaxW = colQty - colDesc - 24;
       items.forEach((item, i) => {
         const qty = parseFloat(item.quantity) || 0;
         const price = parseFloat(item.price) || 0;
         const amount = qty * price;
 
+        // Wrap description text
+        const descLines: string[] = doc.splitTextToSize(item.description || "\u2014", descMaxW);
+        const currentRowH = Math.max(rowH, descLines.length * 13 + 16);
+
         if (y > ph - 150) { doc.addPage(); y = m; }
 
         if (i % 2 === 0) {
           doc.setFillColor(grayBg.r, grayBg.g, grayBg.b);
-          doc.rect(m, y, cw, rowH, "F");
+          doc.rect(m, y, cw, currentRowH, "F");
         }
 
         // Left border accent on every row
         doc.setFillColor(green.r, green.g, green.b);
-        doc.rect(m, y, 2, rowH, "F");
+        doc.rect(m, y, 2, currentRowH, "F");
 
         doc.setFont("helvetica", "normal");
         doc.setTextColor(dark.r, dark.g, dark.b);
-        doc.text(item.description || "\u2014", colDesc + 12, y + 19);
+        let descY = y + 14;
+        descLines.forEach((line: string) => {
+          doc.text(line, colDesc + 12, descY);
+          descY += 13;
+        });
+        const midY = y + currentRowH / 2 + 3;
         doc.setTextColor(slate.r, slate.g, slate.b);
-        doc.text(qty.toString(), colQty, y + 19, { align: "right" });
-        doc.text(`$${price.toFixed(2)}`, colPrice, y + 19, { align: "right" });
+        doc.text(qty.toString(), colQty, midY, { align: "right" });
+        doc.text(`$${price.toFixed(2)}`, colPrice, midY, { align: "right" });
         doc.setFont("helvetica", "bold");
         doc.setTextColor(dark.r, dark.g, dark.b);
-        doc.text(`$${amount.toFixed(2)}`, colAmount - 12, y + 19, { align: "right" });
-        y += rowH;
+        doc.text(`$${amount.toFixed(2)}`, colAmount - 12, midY, { align: "right" });
+        y += currentRowH;
 
         // Row separator
         doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b);

@@ -85,8 +85,13 @@ function generateInvoicePDF(inv: InvoiceData) {
 
   doc.setFontSize(10);
   let custY = y;
+  const billToMaxW = colRight - colLeft - 20;
   if (inv.customer.name) { doc.setFont("helvetica", "bold"); doc.setTextColor(50, 50, 50); doc.text(inv.customer.name, colLeft, custY); doc.setFont("helvetica", "normal"); custY += 15; }
-  if (inv.customer.address) { doc.setTextColor(50, 50, 50); doc.text(inv.customer.address, colLeft, custY); custY += 15; }
+  if (inv.customer.address) {
+    doc.setTextColor(50, 50, 50);
+    const addrLines: string[] = doc.splitTextToSize(inv.customer.address, billToMaxW);
+    addrLines.forEach((line: string) => { doc.text(line, colLeft, custY); custY += 15; });
+  }
   if (inv.customer.phone) { doc.setTextColor(50, 50, 50); doc.text(inv.customer.phone, colLeft, custY); custY += 15; }
   if (inv.customer.email) { doc.setTextColor(50, 50, 50); doc.text(inv.customer.email, colLeft, custY); custY += 15; }
 
@@ -111,15 +116,21 @@ function generateInvoicePDF(inv: InvoiceData) {
   y += rowH;
 
   doc.setFontSize(9);
+  const invDescMaxW = colQty - colDesc - 20;
   inv.items.forEach((item: LineItem, i: number) => {
     const qty = parseFloat(item.quantity) || 0; const price = parseFloat(item.price) || 0; const amount = qty * price;
+    const descLines: string[] = doc.splitTextToSize(item.description || "—", invDescMaxW);
+    const currentRowH = Math.max(rowH, descLines.length * 13 + 14);
     if (y > pageHeight - 140) { doc.addPage(); y = margin; }
-    if (i % 2 === 0) { doc.setFillColor(grayBg.r, grayBg.g, grayBg.b); doc.rect(margin, y, contentWidth, rowH, "F"); }
-    doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50); doc.text(item.description || "—", colDesc + 10, y + 18);
-    doc.setTextColor(slate.r, slate.g, slate.b); doc.text(qty.toString(), colQty, y + 18, { align: "right" });
-    doc.text(`$${price.toFixed(2)}`, colPrice + 10, y + 18, { align: "right" });
-    doc.setFont("helvetica", "bold"); doc.setTextColor(50, 50, 50); doc.text(`$${amount.toFixed(2)}`, colAmount - 10, y + 18, { align: "right" });
-    y += rowH;
+    if (i % 2 === 0) { doc.setFillColor(grayBg.r, grayBg.g, grayBg.b); doc.rect(margin, y, contentWidth, currentRowH, "F"); }
+    doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50);
+    let descY = y + 14;
+    descLines.forEach((line: string) => { doc.text(line, colDesc + 10, descY); descY += 13; });
+    const midY = y + currentRowH / 2 + 3;
+    doc.setTextColor(slate.r, slate.g, slate.b); doc.text(qty.toString(), colQty, midY, { align: "right" });
+    doc.text(`$${price.toFixed(2)}`, colPrice + 10, midY, { align: "right" });
+    doc.setFont("helvetica", "bold"); doc.setTextColor(50, 50, 50); doc.text(`$${amount.toFixed(2)}`, colAmount - 10, midY, { align: "right" });
+    y += currentRowH;
   });
 
   doc.setDrawColor(navy.r, navy.g, navy.b); doc.setLineWidth(1.5); doc.line(margin, y, pageWidth - margin, y);
