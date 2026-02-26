@@ -45,12 +45,12 @@ export default function LandingNav() {
             >
               Sign In
             </Link>
-            <a
-              href="#pricing"
+            <Link
+              href="/signup"
               className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500 whitespace-nowrap"
             >
               Get Started Free
-            </a>
+            </Link>
           </div>
 
           {/* Hamburger — visible below 1024px only */}
@@ -112,13 +112,13 @@ export default function LandingNav() {
             >
               Sign In
             </Link>
-            <a
-              href="#pricing"
+            <Link
+              href="/signup"
               onClick={() => setMenuOpen(false)}
               className="rounded-xl bg-emerald-600 py-3 text-center text-sm font-medium text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500"
             >
               Get Started Free
-            </a>
+            </Link>
           </div>
         </div>
       )}
