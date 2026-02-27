@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/app/components/AppShell";
 import type { ClientData, EstimateData, InvoiceData } from "@/lib/types";
+import { formatDate, formatPhone, isValidEmail, estimateStatusBadge, invoiceStatusBadge } from "@/lib/format";
 
 function getInvoiceDisplayStatus(dueDate: string, status: string): string {
   if (status === "paid") return "paid";
@@ -16,26 +17,6 @@ function getInvoiceDisplayStatus(dueDate: string, status: string): string {
   return status;
 }
 
-function formatDisplayDate(iso: string) {
-  return new Date(iso + "T00:00:00").toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-const estStatusBadge: Record<string, string> = {
-  draft: "bg-slate-500/10 text-slate-400",
-  sent: "bg-amber-500/10 text-amber-400",
-  approved: "bg-emerald-500/10 text-emerald-400",
-  declined: "bg-red-500/10 text-red-400",
-};
-
-const invStatusBadge: Record<string, string> = {
-  unpaid: "bg-amber-500/10 text-amber-400",
-  paid: "bg-emerald-500/10 text-emerald-400",
-  overdue: "bg-red-500/10 text-red-400",
-};
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -45,18 +26,10 @@ export default function ClientsPage() {
   const [selectedClient, setSelectedClient] = useState<ClientData | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [emailError, setEmailError] = useState(false);
-
-  function formatPhone(value: string): string {
-    const hasPlus = value.startsWith("+");
-    const digits = value.replace(/\D/g, "");
-    if (hasPlus || digits.length > 10) return hasPlus ? "+" + digits : digits;
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
-  }
 
   // Detail view state
   const [clientEstimates, setClientEstimates] = useState<EstimateData[]>([]);
@@ -149,7 +122,7 @@ export default function ClientsPage() {
 
   async function handleSave() {
     if (!name.trim()) return;
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setEmailError(true); return; }
+    if (email && !isValidEmail(email)) { setEmailError(true); return; }
     setSaving(true);
 
     const payload = { name, email, phone, address };
@@ -329,7 +302,7 @@ export default function ClientsPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDelete(client.id)}
+                        onClick={() => setConfirmDeleteId(client.id)}
                         disabled={deletingId === client.id}
                         className="rounded-lg bg-white/[0.06] border border-white/[0.1] px-3 py-1.5 text-xs font-medium text-slate-400 transition-all hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -398,7 +371,7 @@ export default function ClientsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => handleDelete(selectedClient.id)}
+                onClick={() => setConfirmDeleteId(selectedClient.id)}
                 disabled={deletingId === selectedClient.id}
                 className="rounded-xl bg-white/[0.06] border border-white/[0.1] px-4 py-2.5 text-sm font-medium text-slate-400 transition-all hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -430,7 +403,7 @@ export default function ClientsPage() {
                         <p className="text-xs text-slate-500">{est.date}</p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${estStatusBadge[est.status] || "bg-slate-500/10 text-slate-400"}`}>
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${estimateStatusBadge[est.status] || "bg-slate-500/10 text-slate-400"}`}>
                           {est.status}
                         </span>
                         <span className="text-sm font-semibold text-white">${est.total.toFixed(2)}</span>
@@ -464,10 +437,10 @@ export default function ClientsPage() {
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-white">{inv.invoiceNumber}</p>
-                          <p className="text-xs text-slate-500">Due {formatDisplayDate(inv.dueDate)}</p>
+                          <p className="text-xs text-slate-500">Due {formatDate(inv.dueDate)}</p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${invStatusBadge[displayStatus] || "bg-slate-500/10 text-slate-400"}`}>
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${invoiceStatusBadge[displayStatus] || "bg-slate-500/10 text-slate-400"}`}>
                             {displayStatus}
                           </span>
                           <span className="text-sm font-semibold text-white">${inv.total.toFixed(2)}</span>
@@ -550,6 +523,34 @@ export default function ClientsPage() {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setConfirmDeleteId(null)} />
+          <div className="relative w-full max-w-sm rounded-2xl bg-[#12131A] border border-white/[0.1] p-6 shadow-2xl mx-4">
+            <h3 className="text-lg font-bold text-white">Delete Client</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              Are you sure you want to delete {clients.find((c) => c.id === confirmDeleteId)?.name || "this client"}? This cannot be undone.
+            </p>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="flex-1 rounded-xl bg-white/[0.06] border border-white/[0.08] py-2.5 text-sm font-medium text-slate-400 transition-all hover:bg-white/[0.1] hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { const id = confirmDeleteId; setConfirmDeleteId(null); handleDelete(id); }}
+                disabled={deletingId === confirmDeleteId}
+                className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-500/25 transition-all hover:bg-red-500 disabled:opacity-50"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

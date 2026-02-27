@@ -5,6 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import AppShell from "@/app/components/AppShell";
 import type { BusinessProfile, EstimateData, InvoiceData } from "@/lib/types";
+import { generateInvoiceNumber, generateDueDate, todayDisplayDate } from "@/lib/utils";
+
+function isProfileComplete(profile: BusinessProfile | null) {
+  return !!(profile?.businessName?.trim() && profile?.ownerName?.trim()
+    && profile?.phone?.trim() && profile?.email?.trim());
+}
 
 export default function DashboardPage() {
   return (
@@ -32,15 +38,25 @@ function DashboardInner() {
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [templateCount, setTemplateCount] = useState(0);
+  const [plan, setPlan] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [convertingId, setConvertingId] = useState<string | null>(null);
+  const [convertError, setConvertError] = useState<string | null>(null);
   const [sendModal, setSendModal] = useState<{ type: "estimate" | "invoice"; id: string } | null>(null);
-  const [skipWelcome, setSkipWelcome] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("onboarding_dismissed") === "true";
     }
     return false;
+  });
+  const [dismissedAttention, setDismissedAttention] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("attention_dismissed");
+        return stored ? JSON.parse(stored) : [];
+      } catch { return []; }
+    }
+    return [];
   });
 
   useEffect(() => {
@@ -49,11 +65,13 @@ function DashboardInner() {
       fetch("/api/invoices").then((r) => r.ok ? r.json() : []),
       fetch("/api/profile").then((r) => r.ok ? r.json() : null),
       fetch("/api/templates").then((r) => r.ok ? r.json() : []),
-    ]).then(([est, inv, prof, tmpl]) => {
+      fetch("/api/usage").then((r) => r.ok ? r.json() : null),
+    ]).then(([est, inv, prof, tmpl, usage]) => {
       setEstimates(Array.isArray(est) ? est : []);
       setInvoices(Array.isArray(inv) ? inv : []);
       if (prof && !prof.error) setProfile(prof);
       setTemplateCount(Array.isArray(tmpl) ? tmpl.length : 0);
+      if (usage?.plan) setPlan(usage.plan);
       setLoading(false);
     });
   }, []);
@@ -79,7 +97,7 @@ function DashboardInner() {
 
   // Onboarding checklist
   const onboardingSteps = [
-    { done: !!(profile?.businessName && profile?.ownerName), label: "Set up your business profile", href: "/setup" },
+    { done: isProfileComplete(profile), label: "Set up your business profile", href: "/setup" },
     { done: estimates.length > 0, label: "Create your first estimate", href: "/estimate" },
     { done: estimates.some((e) => e.status === "sent" || e.status === "approved" || e.status === "declined"), label: "Send an estimate to a customer", href: undefined },
     { done: estimates.some((e) => e.status === "approved") || invoices.some((i) => i.status === "paid"), label: "Get an estimate approved or invoice paid", href: undefined },
@@ -148,20 +166,22 @@ function DashboardInner() {
     });
   });
 
-  // 3. Ready to invoice — approved, no invoice (priority 2)
-  estimates.forEach((est) => {
-    if (est.status !== "approved" || est.invoiceId) return;
-    attentionItems.push({
-      id: `est-ready-${est.id}`,
-      kind: "ready",
-      priority: 2,
-      label: est.customer.name || "Unnamed Customer",
-      amount: est.total,
-      context: "Approved — ready to invoice",
-      linkId: est.id,
-      linkType: "estimate",
+  // 3. Ready to invoice — approved, no invoice (priority 2, Pro only)
+  if (plan === "pro") {
+    estimates.forEach((est) => {
+      if (est.status !== "approved" || est.invoiceId) return;
+      attentionItems.push({
+        id: `est-ready-${est.id}`,
+        kind: "ready",
+        priority: 2,
+        label: est.customer.name || "Unnamed Customer",
+        amount: est.total,
+        context: "Approved — ready to invoice",
+        linkId: est.id,
+        linkType: "estimate",
+      });
     });
-  });
+  }
 
   // 4. Approaching due — unpaid, due within 7 days (priority 3)
   invoices.forEach((inv) => {
@@ -183,12 +203,26 @@ function DashboardInner() {
   });
 
   attentionItems.sort((a, b) => a.priority - b.priority);
-  const needsAttention = attentionItems.slice(0, 5);
+  const visibleAttentionItems = attentionItems.filter(
+    (item) => !dismissedAttention.includes(item.id)
+  );
+  const needsAttention = visibleAttentionItems.slice(0, 5);
 
   function handleCopyLink(link: string, id: string) {
     navigator.clipboard.writeText(link);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  }
+
+  function handleDismissAttention(itemId: string) {
+    const updated = [...dismissedAttention, itemId];
+    setDismissedAttention(updated);
+    localStorage.setItem("attention_dismissed", JSON.stringify(updated));
+  }
+
+  function handleResetDismissals() {
+    setDismissedAttention([]);
+    localStorage.removeItem("attention_dismissed");
   }
 
   const sendModalData = sendModal
@@ -204,18 +238,12 @@ function DashboardInner() {
     : null;
 
   async function handleConvertToInvoice(estId: string) {
+    setConvertError(null);
     setConvertingId(estId);
     try {
-      const now = new Date();
-      const y = now.getFullYear().toString().slice(-2);
-      const m = String(now.getMonth() + 1).padStart(2, "0");
-      const d = String(now.getDate()).padStart(2, "0");
-      const rand = Math.floor(Math.random() * 900 + 100);
-      const invoiceNumber = `INV-${y}${m}${d}-${rand}`;
-      const dateStr = now.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-      const due = new Date(now);
-      due.setDate(due.getDate() + 30);
-      const dueDate = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}-${String(due.getDate()).padStart(2, "0")}`;
+      const invoiceNumber = generateInvoiceNumber();
+      const dateStr = todayDisplayDate();
+      const dueDate = generateDueDate();
       const res = await fetch("/api/invoices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -226,7 +254,7 @@ function DashboardInner() {
         router.push(`/invoice/${data.id}`);
       } else {
         const errData = await res.json().catch(() => ({}));
-        alert(errData.error === "Pro plan required" ? "Upgrade to Pro to create invoices." : errData.error || "Failed to create invoice.");
+        setConvertError(errData.error === "Pro plan required" ? "Upgrade to Pro to create invoices." : errData.error || "Failed to create invoice.");
       }
     } finally {
       setConvertingId(null);
@@ -267,54 +295,6 @@ function DashboardInner() {
       <AppShell>
         <div className="flex items-center justify-center py-20">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-white" />
-        </div>
-      </AppShell>
-    );
-  }
-
-  // Welcome screen for brand-new users
-  if (estimates.length === 0 && !profile?.businessName && !skipWelcome) {
-    return (
-      <AppShell>
-        <div className="flex min-h-[80vh] items-center justify-center px-4">
-          <div className="w-full max-w-md animate-fade-in-up">
-            <div className="rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] p-8 text-center">
-              <h1 className="text-2xl font-bold text-white sm:text-3xl">
-                Welcome to Preciso!
-              </h1>
-              <p className="mt-2 text-sm text-slate-400">
-                Let&apos;s get you set up in 60 seconds.
-              </p>
-
-              <div className="mt-8 space-y-3">
-                <Link
-                  href="/setup"
-                  className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500"
-                >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  Set Up Your Business
-                </Link>
-                <Link
-                  href="/estimate"
-                  className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-white/[0.06] border border-white/[0.1] px-5 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/[0.1]"
-                >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Create Your First Estimate
-                </Link>
-              </div>
-
-              <button
-                onClick={() => setSkipWelcome(true)}
-                className="mt-6 text-xs text-slate-500 transition-colors hover:text-slate-300"
-              >
-                Skip to Dashboard
-              </button>
-            </div>
-          </div>
         </div>
       </AppShell>
     );
@@ -407,6 +387,13 @@ function DashboardInner() {
             {totalEstimates === 0 && <p className="mt-1 text-[11px] text-slate-600">Create your first estimate to start tracking</p>}
           </div>
         </div>
+
+        {/* Convert Error Banner */}
+        {convertError && (
+          <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            {convertError}
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="mt-8 grid gap-3 sm:grid-cols-3 animate-fade-in-up delay-200">
@@ -630,12 +617,22 @@ function DashboardInner() {
 
           {/* Needs Attention */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-6">
-            <div className="flex items-center gap-2.5">
-              <h3 className="text-sm font-semibold text-white">Needs Attention</h3>
-              {needsAttention.length > 0 && (
-                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500/15 border border-red-500/25 px-1.5 text-[10px] font-bold text-red-400">
-                  {attentionItems.length}
-                </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <h3 className="text-sm font-semibold text-white">Needs Attention</h3>
+                {needsAttention.length > 0 && (
+                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500/15 border border-red-500/25 px-1.5 text-[10px] font-bold text-red-400">
+                    {visibleAttentionItems.length}
+                  </span>
+                )}
+              </div>
+              {dismissedAttention.length > 0 && (
+                <button
+                  onClick={handleResetDismissals}
+                  className="text-xs text-slate-400 transition-colors hover:text-white"
+                >
+                  Reset dismissed
+                </button>
               )}
             </div>
 
@@ -677,6 +674,14 @@ function DashboardInner() {
                             {style.badgeLabel}
                           </span>
                           <span className="text-sm font-bold text-white">${item.amount.toFixed(2)}</span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDismissAttention(item.id); }}
+                            className="p-1 text-slate-600 transition-colors hover:text-slate-400"
+                          >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
                         </div>
                       </div>
                       <div className="mt-2.5 flex items-center gap-2">
@@ -723,11 +728,11 @@ function DashboardInner() {
         {/* Footer */}
         <footer className="mt-16 mb-4 flex-shrink-0 animate-fade-in-up delay-500">
           <div className="flex items-center justify-center gap-4 border-t border-white/[0.06] pt-6">
-            <a href="#" className="text-xs text-slate-600 transition-colors hover:text-slate-400">Help</a>
+            <Link href="/setup" className="text-xs text-slate-600 transition-colors hover:text-slate-400">Help</Link>
             <span className="text-slate-700">&middot;</span>
-            <a href="#" className="text-xs text-slate-600 transition-colors hover:text-slate-400">Contact</a>
+            <a href="mailto:support@precisopro.com" className="text-xs text-slate-600 transition-colors hover:text-slate-400">Contact</a>
             <span className="text-slate-700">&middot;</span>
-            <a href="#" className="text-xs text-slate-600 transition-colors hover:text-slate-400">Terms</a>
+            <Link href="/terms" className="text-xs text-slate-600 transition-colors hover:text-slate-400">Terms</Link>
           </div>
         </footer>
       </div>

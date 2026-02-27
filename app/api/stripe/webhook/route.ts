@@ -44,11 +44,11 @@ export async function POST(req: Request) {
         });
       }
     } else {
-      // Invoice payment checkout completed
+      // Invoice payment checkout completed — skip if already paid (idempotent)
       const invoiceId = session.metadata?.invoiceId;
       if (invoiceId) {
-        await prisma.invoice.update({
-          where: { id: invoiceId },
+        await prisma.invoice.updateMany({
+          where: { id: invoiceId, status: { not: "paid" } },
           data: {
             status: "paid",
             stripePaidAt: new Date(),

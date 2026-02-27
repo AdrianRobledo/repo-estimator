@@ -69,7 +69,7 @@ export default function ViewEstimatePage() {
 
           {/* Business header */}
           <div className="border-b border-gray-200 px-6 py-6 sm:px-8">
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-center gap-4">
                 {profile?.logo && (
                   <img
@@ -87,7 +87,7 @@ export default function ViewEstimatePage() {
                   )}
                 </div>
               </div>
-              <div className="text-right text-sm text-gray-500">
+              <div className="text-sm text-gray-500 sm:text-right">
                 {profile?.address && <p>{profile.address}</p>}
                 {profile?.phone && <p>{profile.phone}</p>}
                 {profile?.email && <p>{profile.email}</p>}
@@ -127,20 +127,43 @@ export default function ViewEstimatePage() {
                     {estimate.customer.address}
                   </p>
                 )}
-                {(estimate.customer.phone || estimate.customer.email) && (
-                  <p className="mt-1 text-sm text-gray-500">
-                    {[estimate.customer.phone, estimate.customer.email]
-                      .filter(Boolean)
-                      .join(" \u00B7 ")}
-                  </p>
+                {estimate.customer.phone && (
+                  <p className="mt-1 text-sm text-gray-500">{estimate.customer.phone}</p>
+                )}
+                {estimate.customer.email && (
+                  <p className="text-sm text-gray-500">{estimate.customer.email}</p>
                 )}
               </div>
             </div>
           )}
 
-          {/* Line items table */}
+          {/* Line items — mobile cards */}
+          <div className="px-6 sm:hidden">
+            <div className="divide-y divide-gray-100">
+              {estimate.items.map((item) => {
+                const qty = parseFloat(item.quantity) || 0;
+                const price = parseFloat(item.price) || 0;
+                const amount = qty * price;
+                return (
+                  <div key={item.id} className="flex items-start justify-between gap-3 py-3">
+                    <div className="min-w-0">
+                      <p className="text-sm text-gray-800">{item.description || "\u2014"}</p>
+                      <p className="mt-0.5 text-xs text-gray-400">
+                        {qty} \u00D7 ${price.toFixed(2)}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-sm font-medium text-gray-900">
+                      ${amount.toFixed(2)}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Line items — desktop table */}
           <div className="px-6 sm:px-8">
-            <table className="w-full">
+            <table className="hidden w-full sm:table">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="py-3 pr-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">

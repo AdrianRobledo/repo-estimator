@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatPhone } from "@/lib/format";
 
 interface SendModalProps {
   type: "estimate" | "invoice";
@@ -24,15 +25,6 @@ export default function SendModal({
   const [copied, setCopied] = useState(false);
   const [phone, setPhone] = useState(customerPhone || "");
   const [email, setEmail] = useState(customerEmail || "");
-
-  function formatPhone(value: string): string {
-    const hasPlus = value.startsWith("+");
-    const digits = value.replace(/\D/g, "");
-    if (hasPlus || digits.length > 10) return hasPlus ? "+" + digits : digits;
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
-  }
 
   const label = type === "estimate" ? "Estimate" : "Invoice";
   const path = type === "estimate" ? `/view/${id}` : `/invoice/${id}`;

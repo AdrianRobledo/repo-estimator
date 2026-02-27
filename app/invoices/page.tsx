@@ -7,25 +7,7 @@ import { jsPDF } from "jspdf";
 import AppShell from "@/app/components/AppShell";
 import SendModal from "@/app/components/SendModal";
 import type { InvoiceData, LineItem } from "@/lib/types";
-
-function formatDisplayDate(iso: string) {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    return new Date(iso + "T00:00:00").toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
-  const parsed = new Date(iso);
-  if (!isNaN(parsed.getTime())) {
-    return parsed.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
-  return iso;
-}
+import { formatDate, invoiceStatusBadge } from "@/lib/format";
 
 function getDisplayStatus(dueDate: string, status: string): string {
   if (status === "paid") return "paid";
@@ -97,7 +79,7 @@ function generateInvoicePDF(inv: InvoiceData) {
 
   let detY = y;
   doc.setFontSize(9);
-  const details = [["Invoice No.", inv.invoiceNumber], ["Date", inv.date], ["Due Date", formatDisplayDate(inv.dueDate)], ["Estimate Ref.", inv.estimateNumber]];
+  const details = [["Invoice No.", inv.invoiceNumber], ["Date", inv.date], ["Due Date", formatDate(inv.dueDate)], ["Estimate Ref.", inv.estimateNumber]];
   details.forEach(([label, val]) => {
     doc.setFont("helvetica", "normal"); doc.setTextColor(slate.r, slate.g, slate.b); doc.text(label, colRight, detY);
     doc.setTextColor(50, 50, 50); doc.setFont("helvetica", "bold"); doc.text(val, colRight + 80, detY);
@@ -152,7 +134,7 @@ function generateInvoicePDF(inv: InvoiceData) {
   doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(navy.r, navy.g, navy.b); doc.text("PAYMENT TERMS", margin, y);
   y += 14;
   doc.setFont("helvetica", "normal"); doc.setTextColor(slate.r, slate.g, slate.b); doc.setFontSize(8);
-  const terms = [`Payment is due by ${formatDisplayDate(inv.dueDate)}.`, "Please reference the invoice number with your payment.", "Late payments may be subject to additional fees."];
+  const terms = [`Payment is due by ${formatDate(inv.dueDate)}.`, "Please reference the invoice number with your payment.", "Late payments may be subject to additional fees."];
   terms.forEach((line) => { doc.text(`•  ${line}`, margin, y); y += 13; });
 
   doc.setFillColor(grayBg.r, grayBg.g, grayBg.b); doc.rect(0, pageHeight - 40, pageWidth, 40, "F");
@@ -211,12 +193,6 @@ export default function InvoicesPage() {
   }
 
   const confirmInvoice = confirmPaidId ? invoices.find((i) => i.id === confirmPaidId) ?? null : null;
-
-  const statusBadge: Record<string, string> = {
-    unpaid: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-    paid: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-    overdue: "bg-red-500/15 text-red-400 border-red-500/20",
-  };
 
   // Compute display statuses for all invoices
   const invoicesWithDisplay = useMemo(
@@ -371,7 +347,7 @@ export default function InvoicesPage() {
                       {inv.customer.name || "Unnamed Customer"}
                     </p>
                     <p className="mt-0.5 text-xs text-slate-500">
-                      {inv.invoiceNumber} &middot; Due {formatDisplayDate(inv.dueDate)}
+                      {inv.invoiceNumber} &middot; Due {formatDate(inv.dueDate)}
                     </p>
                     {inv.estimateNumber && (
                       <Link
@@ -384,7 +360,7 @@ export default function InvoicesPage() {
                     )}
                   </div>
                   <div className="flex shrink-0 items-center gap-2.5">
-                    <span className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${statusBadge[inv.displayStatus]}`}>
+                    <span className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${invoiceStatusBadge[inv.displayStatus]}`}>
                       {inv.displayStatus.charAt(0).toUpperCase() + inv.displayStatus.slice(1)}
                     </span>
                     <span className="text-sm font-bold text-white">

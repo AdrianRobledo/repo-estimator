@@ -3,25 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import type { InvoiceData } from "@/lib/types";
-
-function formatDisplayDate(iso: string) {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    return new Date(iso + "T00:00:00").toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  }
-  const parsed = new Date(iso);
-  if (!isNaN(parsed.getTime())) {
-    return parsed.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  }
-  return iso;
-}
+import { formatDisplayDate } from "@/lib/format";
 
 export default function ViewInvoicePage() {
   const params = useParams();
@@ -70,7 +52,7 @@ export default function ViewInvoicePage() {
         <div className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200">
           {/* Business header */}
           <div className="border-b border-gray-200 px-6 py-6 sm:px-8">
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-center gap-4">
                 {profile?.logo && (
                   <img
@@ -88,7 +70,7 @@ export default function ViewInvoicePage() {
                   )}
                 </div>
               </div>
-              <div className="text-right text-sm text-gray-500">
+              <div className="text-sm text-gray-500 sm:text-right">
                 {profile?.address && <p>{profile.address}</p>}
                 {profile?.phone && <p>{profile.phone}</p>}
                 {profile?.email && <p>{profile.email}</p>}
@@ -127,12 +109,11 @@ export default function ViewInvoicePage() {
                       {invoice.customer.address}
                     </p>
                   )}
-                  {(invoice.customer.phone || invoice.customer.email) && (
-                    <p className="mt-1 text-sm text-gray-500">
-                      {[invoice.customer.phone, invoice.customer.email]
-                        .filter(Boolean)
-                        .join(" \u00B7 ")}
-                    </p>
+                  {invoice.customer.phone && (
+                    <p className="mt-1 text-sm text-gray-500">{invoice.customer.phone}</p>
+                  )}
+                  {invoice.customer.email && (
+                    <p className="text-sm text-gray-500">{invoice.customer.email}</p>
                   )}
                 </div>
               </div>
@@ -166,9 +147,33 @@ export default function ViewInvoicePage() {
             </div>
           </div>
 
-          {/* Line items table */}
+          {/* Line items — mobile cards */}
+          <div className="px-6 sm:hidden">
+            <div className="divide-y divide-gray-100">
+              {invoice.items.map((item) => {
+                const qty = parseFloat(item.quantity) || 0;
+                const price = parseFloat(item.price) || 0;
+                const amount = qty * price;
+                return (
+                  <div key={item.id} className="flex items-start justify-between gap-3 py-3">
+                    <div className="min-w-0">
+                      <p className="text-sm text-gray-800">{item.description || "\u2014"}</p>
+                      <p className="mt-0.5 text-xs text-gray-400">
+                        {qty} \u00D7 ${price.toFixed(2)}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-sm font-medium text-gray-900">
+                      ${amount.toFixed(2)}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Line items — desktop table */}
           <div className="px-6 sm:px-8">
-            <table className="w-full">
+            <table className="hidden w-full sm:table">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="py-3 pr-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -286,15 +291,18 @@ export default function ViewInvoicePage() {
         {/* Payment due footer message */}
         <div className="mt-6 text-center">
           {!isPaid && (
-            <p className="text-sm text-gray-500">
-              Payment is due by {formatDisplayDate(invoice.dueDate)}.
+            <div className="text-sm text-gray-500">
+              <p>Payment is due by {formatDisplayDate(invoice.dueDate)}.</p>
               {(profile?.phone || profile?.email) && (
-                <>
-                  {" "}For payment questions, contact{" "}
-                  {[profile?.phone, profile?.email].filter(Boolean).join(" or ")}.
-                </>
+                <p className="mt-1">
+                  For payment questions, contact{" "}
+                  {profile?.phone && <span>{profile.phone}</span>}
+                  {profile?.phone && profile?.email && <br className="sm:hidden" />}
+                  {profile?.phone && profile?.email && <span className="hidden sm:inline"> or </span>}
+                  {profile?.email && <span>{profile.email}</span>}.
+                </p>
               )}
-            </p>
+            </div>
           )}
           <p className="mt-2 text-xs text-gray-300">Powered by Preciso</p>
         </div>

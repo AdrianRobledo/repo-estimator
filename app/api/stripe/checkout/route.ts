@@ -24,13 +24,24 @@ export async function POST(req: Request) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+    // Reuse existing Stripe customer or create one, and persist the ID
+    let customerId = user.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({ email: user.email });
+      customerId = customer.id;
+      await prisma.user.update({
+        where: { id: userId },
+        data: { stripeCustomerId: customerId },
+      });
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: `${appUrl}/dashboard?upgraded=true`,
       cancel_url: `${appUrl}/billing`,
-      customer_email: user.email,
+      customer: customerId,
       metadata: { userId: user.id },
     });
 

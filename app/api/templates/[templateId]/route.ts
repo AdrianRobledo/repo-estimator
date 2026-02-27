@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/api-auth";
+import { safeParseJSON } from "@/lib/utils";
 
 export async function GET(
   _req: Request,
@@ -17,7 +18,7 @@ export async function GET(
     id: t.id,
     name: t.name,
     jobTitle: t.jobTitle,
-    items: JSON.parse(t.items),
+    items: safeParseJSON(t.items, []),
     clientMessage: t.clientMessage,
     disclaimer: t.disclaimer,
   });

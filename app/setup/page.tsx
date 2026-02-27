@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import AppShell from "@/app/components/AppShell";
+import { formatPhone, isValidEmail } from "@/lib/format";
 
 export default function SetupPage() {
   const [form, setForm] = useState({
@@ -13,17 +14,11 @@ export default function SetupPage() {
   });
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [emailError, setEmailError] = useState(false);
+  const [nameError, setNameError] = useState(false);
 
-  function formatPhone(value: string): string {
-    const hasPlus = value.startsWith("+");
-    const digits = value.replace(/\D/g, "");
-    if (hasPlus || digits.length > 10) return hasPlus ? "+" + digits : digits;
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
-  }
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -48,6 +43,7 @@ export default function SetupPage() {
     let value = e.target.value;
     if (e.target.name === "phone") value = formatPhone(value);
     if (e.target.name === "email") setEmailError(false);
+    if (e.target.name === "businessName") setNameError(false);
     setForm({ ...form, [e.target.name]: value });
     setSaved(false);
   }
@@ -65,16 +61,26 @@ export default function SetupPage() {
   }
 
   async function handleSave() {
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    if (!form.businessName.trim()) {
+      setNameError(true);
+      return;
+    }
+    if (form.email && !isValidEmail(form.email)) {
       setEmailError(true);
       return;
     }
-    await fetch("/api/profile", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, logo: logoPreview }),
-    });
-    setSaved(true);
+    setSaveError(false);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, logo: logoPreview }),
+      });
+      if (!res.ok) throw new Error();
+      setSaved(true);
+    } catch {
+      setSaveError(true);
+    }
   }
 
   const inputClass = "mt-1 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10";
@@ -144,7 +150,7 @@ export default function SetupPage() {
           {/* Form Fields */}
           <div>
             <label className="block text-sm font-medium text-slate-400">
-              Business Name
+              Business Name <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -152,8 +158,11 @@ export default function SetupPage() {
               value={form.businessName}
               onChange={handleChange}
               placeholder="e.g. Mike's Plumbing"
-              className={inputClass}
+              className={`${inputClass} ${nameError ? "!border-red-500/50 !ring-1 !ring-red-500/30" : ""}`}
             />
+            {nameError && (
+              <p className="mt-1 text-xs text-red-400">Business name is required</p>
+            )}
           </div>
 
           <div>
@@ -227,6 +236,11 @@ export default function SetupPage() {
           {saved && (
             <p className="text-center text-sm text-emerald-400">
               Profile saved!
+            </p>
+          )}
+          {saveError && (
+            <p className="text-center text-sm text-red-400">
+              Failed to save. Please try again.
             </p>
           )}
         </div>

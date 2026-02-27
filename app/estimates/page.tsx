@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AppShell from "@/app/components/AppShell";
 import type { EstimateData } from "@/lib/types";
+import { generateInvoiceNumber, generateDueDate, todayDisplayDate } from "@/lib/utils";
+import { formatDate, estimateStatusBadge } from "@/lib/format";
 
 const tabs = ["all", "draft", "sent", "approved", "declined"] as const;
 type Tab = (typeof tabs)[number];
@@ -17,13 +19,6 @@ const tabLabels: Record<Tab, string> = {
   declined: "Declined",
 };
 
-const statusBadge: Record<string, string> = {
-  draft: "bg-slate-500/15 text-slate-400 border-slate-500/20",
-  sent: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-  approved: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  declined: "bg-red-500/15 text-red-400 border-red-500/20",
-};
-
 type SortKey = "newest" | "oldest" | "highest" | "lowest";
 
 const sortLabels: Record<SortKey, string> = {
@@ -32,28 +27,6 @@ const sortLabels: Record<SortKey, string> = {
   highest: "Highest Amount",
   lowest: "Lowest Amount",
 };
-
-/** Parses both "February 17, 2026" and "2026-02-17" into a short display date */
-function formatDate(dateStr: string) {
-  // ISO format like "2026-02-17"
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
-  // Human-readable format like "February 17, 2026" — re-format to short
-  const parsed = new Date(dateStr);
-  if (!isNaN(parsed.getTime())) {
-    return parsed.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
-  return dateStr;
-}
 
 /** Get a sortable timestamp from the stored date string */
 function dateToTime(dateStr: string): number {
@@ -72,6 +45,7 @@ export default function EstimatesPage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortKey>("newest");
   const [convertingId, setConvertingId] = useState<string | null>(null);
+  const [convertError, setConvertError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/estimates")
@@ -83,18 +57,12 @@ export default function EstimatesPage() {
   }, []);
 
   async function handleConvertToInvoice(estId: string) {
+    setConvertError(null);
     setConvertingId(estId);
     try {
-      const now = new Date();
-      const y = now.getFullYear().toString().slice(-2);
-      const m = String(now.getMonth() + 1).padStart(2, "0");
-      const d = String(now.getDate()).padStart(2, "0");
-      const rand = Math.floor(Math.random() * 900 + 100);
-      const invoiceNumber = `INV-${y}${m}${d}-${rand}`;
-      const dateStr = now.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-      const due = new Date(now);
-      due.setDate(due.getDate() + 30);
-      const dueDate = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}-${String(due.getDate()).padStart(2, "0")}`;
+      const invoiceNumber = generateInvoiceNumber();
+      const dateStr = todayDisplayDate();
+      const dueDate = generateDueDate();
       const res = await fetch("/api/invoices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -105,7 +73,7 @@ export default function EstimatesPage() {
         router.push(`/invoice/${data.id}`);
       } else {
         const errData = await res.json().catch(() => ({}));
-        alert(errData.error === "Pro plan required" ? "Upgrade to Pro to create invoices." : errData.error || "Failed to create invoice.");
+        setConvertError(errData.error === "Pro plan required" ? "Upgrade to Pro to create invoices." : errData.error || "Failed to create invoice.");
         setConvertingId(null);
       }
     } catch {
@@ -174,6 +142,13 @@ export default function EstimatesPage() {
             New Estimate
           </Link>
         </div>
+
+        {/* Convert Error Banner */}
+        {convertError && (
+          <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            {convertError}
+          </div>
+        )}
 
         {/* Empty state — no estimates at all */}
         {estimates.length === 0 ? (
@@ -314,7 +289,7 @@ export default function EstimatesPage() {
                         ${est.total.toFixed(2)}
                       </td>
                       <td className="px-3 py-3.5 text-right">
-                        <span className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${statusBadge[est.status] || statusBadge.draft}`}>
+                        <span className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${estimateStatusBadge[est.status] || estimateStatusBadge.draft}`}>
                           {est.status.charAt(0).toUpperCase() + est.status.slice(1)}
                         </span>
                       </td>
@@ -362,7 +337,7 @@ export default function EstimatesPage() {
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2.5">
-                      <span className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${statusBadge[est.status] || statusBadge.draft}`}>
+                      <span className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${estimateStatusBadge[est.status] || estimateStatusBadge.draft}`}>
                         {est.status.charAt(0).toUpperCase() + est.status.slice(1)}
                       </span>
                     </div>

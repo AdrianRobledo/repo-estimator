@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { safeParseJSON } from "@/lib/utils";
 
 export async function GET(
   _req: Request,
@@ -30,7 +31,7 @@ export async function GET(
       phone: inv.customerPhone || "",
       email: inv.customerEmail || "",
     },
-    items: JSON.parse(inv.items),
+    items: safeParseJSON(inv.items, []),
     total: inv.total,
     profile: {
       businessName: inv.user.businessName || "",

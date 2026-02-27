@@ -7,36 +7,11 @@ import { jsPDF } from "jspdf";
 import AppShell from "@/app/components/AppShell";
 import SendModal from "@/app/components/SendModal";
 import type { EstimateData, LineItem } from "@/lib/types";
+import { formatDate, estimateStatusBadge } from "@/lib/format";
 
 interface EstimateDetail extends EstimateData {
   createdAt: string;
   updatedAt: string;
-}
-
-const statusBadge: Record<string, string> = {
-  draft: "bg-slate-500/15 text-slate-400 border-slate-500/20",
-  sent: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-  approved: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  declined: "bg-red-500/15 text-red-400 border-red-500/20",
-};
-
-function formatDisplayDate(dateStr: string) {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
-  const parsed = new Date(dateStr);
-  if (!isNaN(parsed.getTime())) {
-    return parsed.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
-  return dateStr;
 }
 
 function formatTimestamp(iso: string) {
@@ -311,12 +286,12 @@ export default function EstimateDetailPage() {
           <h1 className={`text-2xl font-bold ${estimate.customer.name ? "text-white" : "italic text-slate-500"}`}>
             {estimate.customer.name || "Unnamed Customer"}
           </h1>
-          <span className={`inline-flex items-center rounded-lg border px-2.5 py-0.5 text-xs font-semibold ${statusBadge[status] || statusBadge.draft}`}>
+          <span className={`inline-flex items-center rounded-lg border px-2.5 py-0.5 text-xs font-semibold ${estimateStatusBadge[status] || estimateStatusBadge.draft}`}>
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </span>
         </div>
         <p className="mt-1 text-sm text-slate-500">
-          {estimate.estimateNumber} &middot; {formatDisplayDate(estimate.date)}
+          {estimate.estimateNumber} &middot; {formatDate(estimate.date)}
         </p>
 
         {/* Error */}
@@ -409,7 +384,7 @@ export default function EstimateDetailPage() {
           {estimate.jobDate && (
             <div className="border-b border-white/[0.06] px-5 py-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Scheduled Date</p>
-              <p className="mt-1 text-sm font-medium text-slate-300">{formatDisplayDate(estimate.jobDate)}</p>
+              <p className="mt-1 text-sm font-medium text-slate-300">{formatDate(estimate.jobDate)}</p>
             </div>
           )}
 
@@ -501,7 +476,7 @@ export default function EstimateDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-slate-300">Sent</p>
-                  <p className="text-xs text-slate-500">{formatDisplayDate(estimate.date)}</p>
+                  <p className="text-xs text-slate-500">{formatDate(estimate.date)}</p>
                 </div>
               </div>
             )}

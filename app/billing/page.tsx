@@ -22,6 +22,7 @@ function BillingPageInner() {
     stripeCurrentPeriodEnd: string | null;
   } | null>(null);
   const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(true);
 
   useEffect(() => {
     fetch("/api/usage")
@@ -59,9 +60,17 @@ function BillingPageInner() {
         </p>
 
         {/* Success Banner */}
-        {showSuccess && (
-          <div className="mt-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-sm text-emerald-400">
+        {showSuccess && showSuccessBanner && (
+          <div className="mt-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-sm text-emerald-400 flex items-center justify-between">
             Welcome to Pro! You now have unlimited access.
+            <button
+              onClick={() => setShowSuccessBanner(false)}
+              className="ml-3 shrink-0 text-emerald-400/50 hover:text-emerald-400 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         )}
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/api-auth";
+import { safeParseJSON } from "@/lib/utils";
 
 export async function GET(
   _req: Request,
@@ -31,7 +32,7 @@ export async function GET(
       phone: inv.customerPhone || "",
       email: inv.customerEmail || "",
     },
-    items: JSON.parse(inv.items),
+    items: safeParseJSON(inv.items, []),
     total: inv.total,
   });
 }

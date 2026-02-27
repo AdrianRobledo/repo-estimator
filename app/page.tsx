@@ -116,7 +116,7 @@ export default async function Home() {
         <div className="mx-auto max-w-3xl px-6 text-center">
           <p className="text-sm text-slate-500">Trusted by contractors across the United States</p>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
-            <span className="text-xs text-slate-600">500+ Estimates Created</span>
+            <span className="text-xs text-slate-600">10k+ Estimates Created</span>
             <span className="hidden sm:inline text-slate-700">&middot;</span>
             <span className="text-xs text-slate-600">4.9/5 Rating</span>
             <span className="hidden sm:inline text-slate-700">&middot;</span>

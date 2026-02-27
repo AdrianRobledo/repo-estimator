@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, isAdmin } from "@/lib/api-auth";
+import { safeParseJSON } from "@/lib/utils";
 
 export async function GET() {
   const userId = await getAuthUserId();
@@ -34,7 +35,7 @@ export async function GET() {
         phone: est.customerPhone || "",
         email: est.customerEmail || "",
       },
-      items: JSON.parse(est.items),
+      items: safeParseJSON(est.items, []),
       notes: est.notes || undefined,
       total: est.total,
       profile,

@@ -6,6 +6,8 @@ import { jsPDF } from "jspdf";
 import AppShell from "@/app/components/AppShell";
 import SendModal from "@/app/components/SendModal";
 import type { LineItem, BusinessProfile, TemplateData, ClientData } from "@/lib/types";
+import { formatPhone, isValidEmail } from "@/lib/format";
+import { todayDisplayDate } from "@/lib/utils";
 
 function generateEstimateNumber() {
   const now = new Date();
@@ -14,14 +16,6 @@ function generateEstimateNumber() {
   const d = String(now.getDate()).padStart(2, "0");
   const rand = Math.floor(Math.random() * 900 + 100);
   return `EST-${y}${m}${d}-${rand}`;
-}
-
-function formatDate() {
-  return new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 }
 
 export default function EstimatePage() {
@@ -63,15 +57,12 @@ function EstimatePageInner() {
   const [templateSaved, setTemplateSaved] = useState(false);
 
   const [showCongratsToast, setShowCongratsToast] = useState(false);
-
-  function formatPhone(value: string): string {
-    const hasPlus = value.startsWith("+");
-    const digits = value.replace(/\D/g, "");
-    if (hasPlus || digits.length > 10) return hasPlus ? "+" + digits : digits;
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
-  }
+  const [profileWarningDismissed, setProfileWarningDismissed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("profile_warning_dismissed") === "true";
+    }
+    return false;
+  });
 
   const [customer, setCustomer] = useState({
     name: "",
@@ -113,7 +104,7 @@ function EstimatePageInner() {
       .then((data) => { if (Array.isArray(data)) setClients(data); });
 
     setEstimateNumber(generateEstimateNumber());
-    setDate(formatDate());
+    setDate(todayDisplayDate());
 
     const jobDateParam = searchParams.get("jobDate");
     if (jobDateParam) setJobDate(jobDateParam);
@@ -321,7 +312,7 @@ function EstimatePageInner() {
 
   async function handleSaveDraft() {
     if (!customer.name.trim()) { setNameError(true); return; }
-    if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) { setEmailError(true); return; }
+    if (customer.email && !isValidEmail(customer.email)) { setEmailError(true); return; }
     setNameError(false);
     setSaving(true);
     setError(null);
@@ -338,7 +329,7 @@ function EstimatePageInner() {
 
   async function handleSend() {
     if (!customer.name.trim()) { setNameError(true); return; }
-    if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) { setEmailError(true); return; }
+    if (customer.email && !isValidEmail(customer.email)) { setEmailError(true); return; }
     setNameError(false);
     setSaving(true);
     setError(null);
@@ -358,7 +349,7 @@ function EstimatePageInner() {
 
   async function generatePDF() {
     if (!customer.name.trim()) { setNameError(true); return; }
-    if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) { setEmailError(true); return; }
+    if (customer.email && !isValidEmail(customer.email)) { setEmailError(true); return; }
     setNameError(false);
     setSaving(true);
     setError(null);
@@ -696,6 +687,36 @@ function EstimatePageInner() {
                 {profile.email}
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Profile incomplete warning */}
+        {profile && !profile.businessName && !profileWarningDismissed && (
+          <div className="mb-6 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 flex items-start gap-3">
+            <svg className="h-5 w-5 shrink-0 text-amber-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-400">Complete your business profile</p>
+              <p className="mt-0.5 text-xs text-amber-400/70">Your estimates need a business name, phone, and email to look professional.</p>
+            </div>
+            <a
+              href="/setup"
+              className="shrink-0 rounded-lg bg-amber-500/15 border border-amber-500/25 px-3 py-1.5 text-xs font-medium text-amber-400 transition-all hover:bg-amber-500/25"
+            >
+              Set Up Profile
+            </a>
+            <button
+              onClick={() => {
+                setProfileWarningDismissed(true);
+                localStorage.setItem("profile_warning_dismissed", "true");
+              }}
+              className="shrink-0 text-amber-400/50 hover:text-amber-400 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         )}
 

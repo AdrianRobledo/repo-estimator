@@ -12,6 +12,7 @@ export default function TemplatesPage() {
   const [view, setView] = useState<"list" | "form">("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Form state
@@ -241,7 +242,7 @@ export default function TemplatesPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(tmpl.id)}
+                          onClick={() => setConfirmDeleteId(tmpl.id)}
                           disabled={deletingId === tmpl.id}
                           className="rounded-lg bg-white/[0.06] border border-white/[0.1] px-3 py-1.5 text-xs font-medium text-slate-400 transition-all hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -475,6 +476,34 @@ export default function TemplatesPage() {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setConfirmDeleteId(null)} />
+          <div className="relative w-full max-w-sm rounded-2xl bg-[#12131A] border border-white/[0.1] p-6 shadow-2xl mx-4">
+            <h3 className="text-lg font-bold text-white">Delete Template</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              Are you sure? This cannot be undone.
+            </p>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="flex-1 rounded-xl bg-white/[0.06] border border-white/[0.08] py-2.5 text-sm font-medium text-slate-400 transition-all hover:bg-white/[0.1] hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { const id = confirmDeleteId; setConfirmDeleteId(null); handleDelete(id); }}
+                disabled={deletingId === confirmDeleteId}
+                className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-500/25 transition-all hover:bg-red-500 disabled:opacity-50"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

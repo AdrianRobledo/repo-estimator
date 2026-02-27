@@ -104,3 +104,19 @@ body {
   animation: progress-fill 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: 300ms;
 }
+
+/* Wizard step slide-in animation */
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
