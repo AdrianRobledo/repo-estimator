@@ -351,7 +351,6 @@ function EstimatePageInner() {
     try {
       const id = await saveEstimate("sent");
       if (!id) throw new Error("Save failed");
-      if (editId) { router.push(`/estimates/${editId}`); return; }
       const link = `${window.location.origin}/view/${id}`;
       setShareLink(link);
       setShowSendModal(true);
@@ -1157,7 +1156,7 @@ function EstimatePageInner() {
           customerPhone={customer.phone}
           customerEmail={customer.email}
           businessName={profile?.businessName}
-          onClose={() => setShowSendModal(false)}
+          onClose={() => router.push(`/estimates/${savedId || editId}`)}
         />
       )}
 

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import type { EstimateData } from "@/lib/types";
+import { jsPDF } from "jspdf";
+import type { EstimateData, LineItem } from "@/lib/types";
 
 export default function ViewEstimatePage() {
   const params = useParams();
@@ -36,6 +37,133 @@ export default function ViewEstimatePage() {
     });
     setResponded(status);
     setSubmitting(false);
+  }
+
+  function generatePDF() {
+    if (!estimate) return;
+    const est = estimate;
+    const prof = est.profile;
+    const doc = new jsPDF({ unit: "pt", format: "letter" });
+    const pw = doc.internal.pageSize.getWidth();
+    const ph = doc.internal.pageSize.getHeight();
+    const margin = 48;
+    const cw = pw - margin * 2;
+    let y = 0;
+
+    const green = { r: 5, g: 150, b: 105 };
+    const darkGreen = { r: 4, g: 120, b: 87 };
+    const navy = { r: 15, g: 23, b: 42 };
+    const dark = { r: 30, g: 41, b: 59 };
+    const slate = { r: 100, g: 116, b: 139 };
+    const lightSlate = { r: 148, g: 163, b: 184 };
+    const grayBg = { r: 248, g: 250, b: 252 };
+    const grayLine = { r: 226, g: 232, b: 240 };
+
+    y = margin;
+    let logoEndX = margin;
+    if (prof?.logo) {
+      try { doc.addImage(prof.logo, "JPEG", margin, y - 8, 52, 52); logoEndX = margin + 62; } catch { /* skip */ }
+    }
+    if (prof) {
+      doc.setFont("helvetica", "bold"); doc.setFontSize(20); doc.setTextColor(navy.r, navy.g, navy.b);
+      doc.text(prof.businessName || "", logoEndX, y + 12);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(slate.r, slate.g, slate.b);
+      const contactLeft = [prof.ownerName, prof.phone].filter(Boolean).join("  \u00B7  ");
+      if (contactLeft) doc.text(contactLeft, logoEndX, y + 28);
+      if (prof.email) doc.text(prof.email, logoEndX, y + 40);
+      if (prof.address) doc.text(prof.address, logoEndX, y + 52);
+      const rightContact = [prof.phone, prof.email].filter(Boolean);
+      if (rightContact.length) {
+        doc.setFontSize(8.5); doc.setTextColor(lightSlate.r, lightSlate.g, lightSlate.b);
+        let ry = y + 12;
+        rightContact.forEach((line) => { doc.text(line!, pw - margin, ry, { align: "right" }); ry += 12; });
+      }
+    }
+    y += 56;
+
+    doc.setFillColor(green.r, green.g, green.b); doc.rect(0, y, pw, 4, "F"); y += 20;
+
+    doc.setFont("helvetica", "bold"); doc.setFontSize(28); doc.setTextColor(navy.r, navy.g, navy.b);
+    doc.text("ESTIMATE", margin, y + 4);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(slate.r, slate.g, slate.b);
+    doc.text("Estimate No.", pw - margin - 120, y - 8);
+    doc.setFont("helvetica", "bold"); doc.setTextColor(dark.r, dark.g, dark.b);
+    doc.text(est.estimateNumber, pw - margin, y - 8, { align: "right" });
+    doc.setFont("helvetica", "normal"); doc.setTextColor(slate.r, slate.g, slate.b);
+    doc.text("Date", pw - margin - 120, y + 6);
+    doc.setTextColor(dark.r, dark.g, dark.b); doc.text(est.date, pw - margin, y + 6, { align: "right" });
+    y += 40;
+
+    doc.setFillColor(grayBg.r, grayBg.g, grayBg.b); doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b); doc.setLineWidth(0.75);
+    const boxH = 80; doc.roundedRect(margin, y, cw, boxH, 6, 6, "FD");
+    doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(green.r, green.g, green.b);
+    doc.text("PREPARED FOR", margin + 14, y + 16);
+    doc.setFont("helvetica", "normal"); doc.setTextColor(dark.r, dark.g, dark.b); doc.setFontSize(10);
+    let cy = y + 32;
+    if (est.customer.name) { doc.setFont("helvetica", "bold"); doc.text(est.customer.name, margin + 14, cy); doc.setFont("helvetica", "normal"); cy += 14; }
+    if (est.customer.address) { doc.setTextColor(slate.r, slate.g, slate.b); doc.text(est.customer.address, margin + 14, cy); cy += 14; }
+    const custContact = [est.customer.phone, est.customer.email].filter(Boolean).join("  \u00B7  ");
+    if (custContact) { doc.setTextColor(slate.r, slate.g, slate.b); doc.setFontSize(9); doc.text(custContact, margin + 14, cy); }
+    y += boxH + 20;
+
+    const colDesc = margin; const colQty = margin + cw * 0.52; const colPrice = margin + cw * 0.72; const colAmount = pw - margin; const rowH = 30;
+    doc.setFillColor(darkGreen.r, darkGreen.g, darkGreen.b); doc.roundedRect(margin, y, cw, rowH, 4, 4, "F");
+    doc.setFillColor(darkGreen.r, darkGreen.g, darkGreen.b); doc.rect(margin, y + rowH - 6, cw, 6, "F");
+    doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+    doc.text("DESCRIPTION", colDesc + 12, y + 19); doc.text("QTY", colQty, y + 19, { align: "right" });
+    doc.text("UNIT PRICE", colPrice, y + 19, { align: "right" }); doc.text("AMOUNT", colAmount - 12, y + 19, { align: "right" });
+    y += rowH;
+
+    doc.setFontSize(9);
+    const total = est.total;
+    est.items.forEach((item: LineItem, i: number) => {
+      const qty = parseFloat(item.quantity) || 0; const price = parseFloat(item.price) || 0; const amount = qty * price;
+      if (y > ph - 150) { doc.addPage(); y = margin; }
+      if (i % 2 === 0) { doc.setFillColor(grayBg.r, grayBg.g, grayBg.b); doc.rect(margin, y, cw, rowH, "F"); }
+      doc.setFillColor(green.r, green.g, green.b); doc.rect(margin, y, 2, rowH, "F");
+      doc.setFont("helvetica", "normal"); doc.setTextColor(dark.r, dark.g, dark.b); doc.text(item.description || "\u2014", colDesc + 12, y + 19);
+      doc.setTextColor(slate.r, slate.g, slate.b); doc.text(qty.toString(), colQty, y + 19, { align: "right" });
+      doc.text(`$${price.toFixed(2)}`, colPrice, y + 19, { align: "right" });
+      doc.setFont("helvetica", "bold"); doc.setTextColor(dark.r, dark.g, dark.b); doc.text(`$${amount.toFixed(2)}`, colAmount - 12, y + 19, { align: "right" });
+      y += rowH;
+      doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b); doc.setLineWidth(0.5); doc.line(margin, y, pw - margin, y);
+    });
+    y += 12;
+
+    const totalsX = pw - margin - 200; const totalsValX = pw - margin - 12;
+    doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(slate.r, slate.g, slate.b);
+    doc.text("Subtotal", totalsX, y + 14); doc.setTextColor(dark.r, dark.g, dark.b); doc.text(`$${total.toFixed(2)}`, totalsValX, y + 14, { align: "right" }); y += 24;
+    doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b); doc.setLineWidth(0.5); doc.line(totalsX, y, pw - margin, y); y += 4;
+    doc.setFillColor(green.r, green.g, green.b); doc.roundedRect(totalsX - 10, y, 222, 38, 6, 6, "F");
+    doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+    doc.text("TOTAL DUE", totalsX + 6, y + 24); doc.setFontSize(16); doc.text(`$${total.toFixed(2)}`, totalsValX, y + 24, { align: "right" }); y += 56;
+
+    if (est.notes) {
+      if (y > ph - 140) { doc.addPage(); y = margin; }
+      doc.setFillColor(grayBg.r, grayBg.g, grayBg.b); doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b); doc.setLineWidth(0.5);
+      const noteLines = doc.splitTextToSize(est.notes, cw - 28); const notesBoxH = 34 + noteLines.length * 12;
+      doc.roundedRect(margin, y, cw, notesBoxH, 4, 4, "FD");
+      doc.setFillColor(green.r, green.g, green.b); doc.rect(margin, y + 4, 3, notesBoxH - 8, "F");
+      doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(green.r, green.g, green.b); doc.text("NOTES", margin + 14, y + 16);
+      doc.setFont("helvetica", "normal"); doc.setTextColor(slate.r, slate.g, slate.b); doc.setFontSize(8.5);
+      let ny = y + 30; noteLines.forEach((line: string) => { doc.text(line, margin + 14, ny); ny += 12; });
+      y += notesBoxH + 16;
+    }
+
+    if (y > ph - 120) { doc.addPage(); y = margin; }
+    doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b); doc.setLineWidth(0.5); doc.line(margin, y, pw - margin, y); y += 16;
+    doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(navy.r, navy.g, navy.b); doc.text("TERMS & CONDITIONS", margin, y); y += 14;
+    doc.setFont("helvetica", "normal"); doc.setTextColor(slate.r, slate.g, slate.b); doc.setFontSize(8);
+    const terms = ["This estimate is valid for 30 days from the date of issue.", "Payment is due upon completion unless otherwise agreed in writing.", "Prices are subject to change if scope of work changes."];
+    terms.forEach((line) => { doc.text(`\u2022  ${line}`, margin, y); y += 13; });
+
+    const footY = ph - 44;
+    doc.setFillColor(navy.r, navy.g, navy.b); doc.rect(0, footY, pw, 44, "F");
+    doc.setFillColor(green.r, green.g, green.b); doc.rect(0, footY, pw, 2, "F");
+    doc.setFontSize(8.5); doc.setFont("helvetica", "normal"); doc.setTextColor(200, 215, 235);
+    doc.text("This estimate is valid for 30 days  \u00B7  Powered by Preciso", pw / 2, footY + 26, { align: "center" });
+
+    doc.save(`${est.estimateNumber}.pdf`);
   }
 
   if (notFound) {
@@ -321,6 +449,20 @@ export default function ViewEstimatePage() {
             )}
           </div>
         )}
+
+        {/* Download PDF */}
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={generatePDF}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white py-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 active:bg-gray-100"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download PDF
+          </button>
+        </div>
 
         {/* Footer */}
         <div className="mt-8 text-center">

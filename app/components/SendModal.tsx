@@ -187,7 +187,7 @@ export default function SendModal({
           onClick={onClose}
           className="mt-5 w-full rounded-xl bg-white/[0.06] border border-white/[0.08] py-2.5 text-sm font-medium text-slate-400 transition-all hover:bg-white/[0.1] hover:text-white"
         >
-          Done
+          View {label}
         </button>
       </div>
     </div>
