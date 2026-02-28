@@ -46,7 +46,7 @@ export default function SignupPage() {
         setError("Account linked but could not sign in. Please try logging in.");
         return;
       }
-      router.push("/dashboard");
+      router.push("/onboarding");
       router.refresh();
       return;
     }
@@ -64,7 +64,7 @@ export default function SignupPage() {
       setError("Account created but could not sign in. Please try logging in.");
       return;
     }
-    router.push("/dashboard");
+    router.push("/onboarding");
     router.refresh();
   }
 
@@ -86,7 +86,7 @@ export default function SignupPage() {
           {/* OAuth Buttons */}
           <button
             type="button"
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("google", { callbackUrl: "/onboarding" })}
             className="flex w-full items-center justify-center gap-3 rounded-xl bg-white/[0.07] border border-white/[0.1] py-2.5 text-sm font-medium text-white transition-all hover:bg-white/[0.12]"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">

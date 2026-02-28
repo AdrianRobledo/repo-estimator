@@ -7,11 +7,6 @@ import AppShell from "@/app/components/AppShell";
 import type { BusinessProfile, EstimateData, InvoiceData } from "@/lib/types";
 import { generateInvoiceNumber, generateDueDate, todayDisplayDate } from "@/lib/utils";
 
-function isProfileComplete(profile: BusinessProfile | null) {
-  return !!(profile?.businessName?.trim() && profile?.ownerName?.trim()
-    && profile?.phone?.trim() && profile?.email?.trim());
-}
-
 export default function DashboardPage() {
   return (
     <Suspense>
@@ -24,6 +19,20 @@ function DashboardInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [upgradeToast, setUpgradeToast] = useState(false);
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/onboarding")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data && !data.onboardingComplete) {
+          router.replace("/onboarding");
+          return;
+        }
+        setCheckingOnboarding(false);
+      })
+      .catch(() => setCheckingOnboarding(false));
+  }, [router]);
 
   useEffect(() => {
     if (searchParams.get("upgraded") === "true") {
@@ -43,12 +52,6 @@ function DashboardInner() {
   const [convertingId, setConvertingId] = useState<string | null>(null);
   const [convertError, setConvertError] = useState<string | null>(null);
   const [sendModal, setSendModal] = useState<{ type: "estimate" | "invoice"; id: string } | null>(null);
-  const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("onboarding_dismissed") === "true";
-    }
-    return false;
-  });
   const [dismissedAttention, setDismissedAttention] = useState<string[]>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -94,15 +97,6 @@ function DashboardInner() {
   const totalRevenue = invoices
     .filter((i) => i.status === "paid")
     .reduce((sum, i) => sum + i.total, 0);
-
-  // Onboarding checklist
-  const onboardingSteps = [
-    { done: isProfileComplete(profile), label: "Set up your business profile", href: "/setup" },
-    { done: estimates.length > 0, label: "Create your first estimate", href: "/estimate" },
-    { done: estimates.some((e) => e.status === "sent" || e.status === "approved" || e.status === "declined"), label: "Send an estimate to a customer", href: undefined },
-    { done: estimates.some((e) => e.status === "approved") || invoices.some((i) => i.status === "paid"), label: "Get an estimate approved or invoice paid", href: undefined },
-  ];
-  const completedSteps = onboardingSteps.filter((s) => s.done).length;
 
   // Needs Attention items
   type AttentionItem = {
@@ -290,7 +284,7 @@ function DashboardInner() {
     .sort((a, b) => a.jobDate!.localeCompare(b.jobDate!))
     .slice(0, 3);
 
-  if (loading) {
+  if (loading || checkingOnboarding) {
     return (
       <AppShell>
         <div className="flex items-center justify-center py-20">
@@ -529,93 +523,8 @@ function DashboardInner() {
           )}
         </div>
 
-        {/* Onboarding + Needs Attention */}
+        {/* Needs Attention */}
         <div className="mt-8 space-y-6 animate-fade-in-up delay-300">
-          {!onboardingDismissed && (
-            completedSteps < onboardingSteps.length ? (
-              /* Onboarding Checklist — in progress */
-              <div className="rounded-xl bg-white/[0.04] border border-white/[0.08] overflow-hidden">
-                <div className="h-1 w-full bg-white/[0.04]">
-                  <div
-                    className="h-full bg-gradient-to-r from-white/60 to-white/40 animate-progress"
-                    style={{ width: `${(completedSteps / onboardingSteps.length) * 100}%` }}
-                  />
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-white">Getting Started</h3>
-                    <span className="text-xs text-slate-500">{completedSteps}/{onboardingSteps.length}</span>
-                  </div>
-                  <div className="mt-4 space-y-1">
-                    {onboardingSteps.map((step, i) => {
-                      const inner = (
-                        <div className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 ${
-                          step.href && !step.done ? "hover:bg-white/[0.05] cursor-pointer" : ""
-                        } ${step.done ? "opacity-60" : ""}`}>
-                          <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-all ${
-                            step.done
-                              ? "bg-emerald-500/20 border border-emerald-500/30"
-                              : "border-2 border-white/[0.12]"
-                          }`}>
-                            {step.done && (
-                              <svg className="h-3.5 w-3.5 text-emerald-400 animate-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </div>
-                          <span className={`flex-1 text-sm ${step.done ? "text-slate-500 line-through" : "text-slate-300"}`}>
-                            {step.label}
-                          </span>
-                          {step.href && !step.done && (
-                            <svg className="h-4 w-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          )}
-                        </div>
-                      );
-                      return step.href ? (
-                        <Link key={i} href={step.href} className="block">
-                          {inner}
-                        </Link>
-                      ) : (
-                        <div key={i}>{inner}</div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Onboarding Complete — congratulations */
-              <div className="rounded-xl bg-white/[0.04] border border-emerald-500/20 overflow-hidden">
-                <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-emerald-400" />
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/25">
-                        <svg className="h-5 w-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-emerald-400">All set! You&apos;re ready to go.</h3>
-                        <p className="mt-0.5 text-xs text-slate-500">You&apos;ve completed all the getting started steps.</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => { setOnboardingDismissed(true); localStorage.setItem("onboarding_dismissed", "true"); }}
-                      className="shrink-0 text-slate-600 transition-colors hover:text-slate-400"
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )
-          )}
-
-          {/* Needs Attention */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">

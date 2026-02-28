@@ -8,6 +8,7 @@ import SendModal from "@/app/components/SendModal";
 import type { LineItem, BusinessProfile, TemplateData, ClientData } from "@/lib/types";
 import { formatPhone, isValidEmail } from "@/lib/format";
 import { todayDisplayDate } from "@/lib/utils";
+import { sampleEstimates } from "@/lib/sample-estimates";
 
 function generateEstimateNumber() {
   const now = new Date();
@@ -56,6 +57,7 @@ function EstimatePageInner() {
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateSaved, setTemplateSaved] = useState(false);
 
+  const [isSampleMode, setIsSampleMode] = useState(false);
   const [showCongratsToast, setShowCongratsToast] = useState(false);
   const [profileWarningDismissed, setProfileWarningDismissed] = useState(() => {
     if (typeof window !== "undefined") {
@@ -137,6 +139,19 @@ function EstimatePageInner() {
             setNextId(loaded.length + 1);
           }
         });
+    }
+
+    const sampleParam = searchParams.get("sample");
+    if (sampleParam) {
+      const sample = sampleEstimates[sampleParam] || sampleEstimates["Other"];
+      if (sample) {
+        setCustomer(sample.customer);
+        setNotes(sample.notes);
+        const loaded = sample.items.map((item, i) => ({ ...item, id: i + 1 }));
+        setItems(loaded);
+        setNextId(loaded.length + 1);
+        setIsSampleMode(true);
+      }
     }
   }, [searchParams]);
 
@@ -717,6 +732,42 @@ function EstimatePageInner() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
+          </div>
+        )}
+
+        {/* Sample Mode Banner */}
+        {isSampleMode && (
+          <div className="mb-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="h-1.5 w-12 rounded-full bg-emerald-500" />
+              <div className="h-1.5 w-12 rounded-full bg-emerald-500" />
+            </div>
+            <p className="text-xs text-emerald-400/70 mb-2">Step 2 of 2: Your first estimate</p>
+            <p className="text-sm text-emerald-300">
+              This is a sample estimate for your trade. Edit it to match a real job, or start fresh!
+            </p>
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setIsSampleMode(false)}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500"
+              >
+                Edit This Estimate
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomer({ name: "", address: "", phone: "", email: "" });
+                  setItems([{ id: 1, description: "", quantity: "1", price: "" }]);
+                  setNextId(2);
+                  setNotes("");
+                  setIsSampleMode(false);
+                }}
+                className="rounded-lg bg-white/[0.06] border border-white/[0.1] px-4 py-2 text-xs font-medium text-slate-300 transition-all hover:bg-white/[0.1]"
+              >
+                Start Fresh
+              </button>
+            </div>
           </div>
         )}
 

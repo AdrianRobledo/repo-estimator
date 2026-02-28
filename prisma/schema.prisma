@@ -20,6 +20,8 @@ model User {
   businessEmail    String?
   businessAddress  String?
   logo             String?
+  onboardingComplete Boolean @default(false)
+  tradeType          String?
 
   plan                  String    @default("free")
   stripeCustomerId      String?
