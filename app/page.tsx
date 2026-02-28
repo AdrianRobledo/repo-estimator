@@ -104,10 +104,17 @@ export default async function Home() {
                     Decline
                   </div>
                 </div>
+                {/* Download PDF */}
+                <div className="mt-2 flex items-center justify-center gap-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] py-2.5 text-xs font-medium text-slate-500">
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Download PDF
+                </div>
               </div>
             </div>
           </div>
-          <p className="mt-5 text-center text-xs text-slate-500">What your customers see when you send an estimate</p>
+          <p className="mt-5 text-center text-xs text-slate-500">What your customers see — approve, decline, or save a PDF copy</p>
         </div>
       </section>
 
