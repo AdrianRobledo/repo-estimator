@@ -54,16 +54,12 @@ export async function POST(req: Request) {
     },
   });
 
-  // Send verification email
+  // Send verification email (non-blocking — don't fail signup if email fails)
   try {
     const token = await generateVerificationToken(email);
     await sendVerificationEmail(email, token);
   } catch (err) {
     console.error("Failed to send verification email:", err);
-    return NextResponse.json(
-      { error: "Account created but we couldn't send the verification email. Please try logging in and requesting a new one." },
-      { status: 500 }
-    );
   }
 
   return NextResponse.json({ success: true }, { status: 201 });
