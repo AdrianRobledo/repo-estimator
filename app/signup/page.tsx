@@ -51,7 +51,21 @@ export default function SignupPage() {
       return;
     }
 
-    router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+    // TODO: Re-enable once Resend domain is verified
+    // router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+
+    // Temporarily auto-sign in after signup
+    const signInRes = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+    if (signInRes?.error) {
+      setError("Account created but could not sign in. Please try logging in.");
+      return;
+    }
+    router.push("/onboarding");
+    router.refresh();
   }
 
   return (
