@@ -11,7 +11,7 @@ function getBaseUrl() {
 export async function sendVerificationEmail(email: string, token: string) {
   const verifyUrl = `${getBaseUrl()}/verify-email?token=${token}`;
 
-  await getResend().emails.send({
+  const { error } = await getResend().emails.send({
     from: process.env.EMAIL_FROM || "onboarding@resend.dev",
     to: email,
     subject: "Verify your email — PrecisoPro",
@@ -24,12 +24,17 @@ export async function sendVerificationEmail(email: string, token: string) {
       </div>
     `,
   });
+
+  if (error) {
+    console.error("Resend verification email error:", error);
+    throw new Error(`Failed to send verification email: ${error.message}`);
+  }
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
   const resetUrl = `${getBaseUrl()}/reset-password?token=${token}`;
 
-  await getResend().emails.send({
+  const { error } = await getResend().emails.send({
     from: process.env.EMAIL_FROM || "onboarding@resend.dev",
     to: email,
     subject: "Reset your password — PrecisoPro",
@@ -42,4 +47,9 @@ export async function sendPasswordResetEmail(email: string, token: string) {
       </div>
     `,
   });
+
+  if (error) {
+    console.error("Resend password reset email error:", error);
+    throw new Error(`Failed to send password reset email: ${error.message}`);
+  }
 }
