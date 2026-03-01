@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validateToken, consumeToken } from "@/lib/tokens";
+import { validateToken, consumeToken, generateAutoSignInToken } from "@/lib/tokens";
 
 export async function POST(req: Request) {
   const { token } = await req.json();
@@ -24,5 +24,7 @@ export async function POST(req: Request) {
 
   await consumeToken(token);
 
-  return NextResponse.json({ success: true });
+  const signInToken = await generateAutoSignInToken(record.email);
+
+  return NextResponse.json({ success: true, email: record.email, signInToken });
 }

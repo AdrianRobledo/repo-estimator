@@ -1,7 +1,8 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Logo from "@/app/components/Logo";
 
@@ -15,10 +16,11 @@ export default function VerifyEmailPage() {
 
 function VerifyEmailInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const token = searchParams.get("token");
   const email = searchParams.get("email");
 
-  const [status, setStatus] = useState<"loading" | "success" | "error" | "pending">(
+  const [status, setStatus] = useState<"loading" | "success" | "signing_in" | "error" | "pending">(
     token ? "loading" : "pending"
   );
   const [resending, setResending] = useState(false);
@@ -32,9 +34,24 @@ function VerifyEmailInner() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token }),
     }).then(async (res) => {
-      setStatus(res.ok ? "success" : "error");
+      if (!res.ok) { setStatus("error"); return; }
+      const data = await res.json();
+      if (data.signInToken && data.email) {
+        setStatus("signing_in");
+        const signInRes = await signIn("credentials", {
+          email: data.email,
+          signInToken: data.signInToken,
+          redirect: false,
+        });
+        if (signInRes?.ok) {
+          router.push("/onboarding");
+          router.refresh();
+          return;
+        }
+      }
+      setStatus("success");
     });
-  }, [token]);
+  }, [token, router]);
 
   async function handleResend() {
     if (!email || resending) return;
@@ -56,8 +73,13 @@ function VerifyEmailInner() {
         </div>
 
         <div className="mt-8 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6 text-center">
-          {status === "loading" && (
-            <p className="text-slate-400">Verifying your email...</p>
+          {(status === "loading" || status === "signing_in") && (
+            <div>
+              <div className="mx-auto mb-3 h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-emerald-400" />
+              <p className="text-slate-400">
+                {status === "signing_in" ? "Signing you in..." : "Verifying your email..."}
+              </p>
+            </div>
           )}
 
           {status === "success" && (

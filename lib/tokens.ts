@@ -32,6 +32,21 @@ export async function generatePasswordResetToken(email: string) {
   return token;
 }
 
+export async function generateAutoSignInToken(email: string) {
+  await prisma.verificationToken.deleteMany({
+    where: { email, type: "auto_signin" },
+  });
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const expires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  await prisma.verificationToken.create({
+    data: { email, token, type: "auto_signin", expires },
+  });
+
+  return token;
+}
+
 export async function validateToken(token: string, type: string) {
   const record = await prisma.verificationToken.findUnique({
     where: { token },
