@@ -22,10 +22,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ verified: true });
   }
 
-  // TODO: Re-enable once Resend domain is verified
-  // if (!user.emailVerified) {
-  //   return NextResponse.json({ verified: false, email: user.email });
-  // }
+  if (!user.emailVerified) {
+    return NextResponse.json({ verified: false, email: user.email });
+  }
 
   return NextResponse.json({ verified: true });
 }

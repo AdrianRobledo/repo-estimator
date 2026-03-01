@@ -36,8 +36,7 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
 
-        // TODO: Re-enable once Resend domain is verified
-        // if (!user.emailVerified) return null;
+        if (!user.emailVerified) return null;
 
         return {
           id: user.id,
