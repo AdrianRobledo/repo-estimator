@@ -194,7 +194,7 @@ export default async function Home() {
       </section>
 
       {/* Trades */}
-      <section id="templates" className="border-t border-white/[0.06] py-20 scroll-mt-20">
+      <section id="trades" className="border-t border-white/[0.06] py-20 scroll-mt-20">
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="text-center text-xs font-semibold uppercase tracking-widest text-slate-500">
             Built for Contractors Like You
@@ -242,7 +242,7 @@ export default async function Home() {
             ))}
           </div>
           <p className="mt-8 text-center text-sm text-slate-400">
-            Create custom templates for your most common jobs and reuse them with one tap.
+            Whatever the job, create a professional estimate in under a minute.
           </p>
         </div>
       </section>
@@ -268,7 +268,7 @@ export default async function Home() {
                 <span className="text-sm text-slate-500">/month</span>
               </div>
               <ul className="mt-8 flex-1 space-y-3">
-                {["3 estimates per month", "PDF generation", "Shareable approval links", "Basic templates"].map((feature) => (
+                {["3 estimates per month", "PDF generation", "Shareable approval links", "Client management"].map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
                     <svg className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -301,7 +301,7 @@ export default async function Home() {
                 <span className="text-sm text-slate-500">/month</span>
               </div>
               <ul className="mt-8 flex-1 space-y-3">
-                {["Unlimited estimates", "Invoicing and payment tracking", "Unlimited templates and clients", "Priority support"].map((feature) => (
+                {["Unlimited estimates", "Invoicing and payment tracking", "Unlimited clients", "Priority support"].map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
                     <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -334,7 +334,7 @@ export default async function Home() {
                 <span className="text-sm text-slate-500">/year</span>
               </div>
               <ul className="mt-8 flex-1 space-y-3">
-                {["Unlimited estimates", "Invoicing and payment tracking", "Unlimited templates and clients", "Priority support"].map((feature) => (
+                {["Unlimited estimates", "Invoicing and payment tracking", "Unlimited clients", "Priority support"].map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
                     <svg className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -374,7 +374,7 @@ export default async function Home() {
             <ul className="mt-3 flex flex-col gap-2">
               <li><a href="#how-it-works" className="text-[13px] text-[#9CA3AF] no-underline transition-colors hover:text-emerald-400">Features</a></li>
               <li><a href="#pricing" className="text-[13px] text-[#9CA3AF] no-underline transition-colors hover:text-emerald-400">Pricing</a></li>
-              <li><a href="#templates" className="text-[13px] text-[#9CA3AF] no-underline transition-colors hover:text-emerald-400">Templates</a></li>
+              <li><a href="#trades" className="text-[13px] text-[#9CA3AF] no-underline transition-colors hover:text-emerald-400">Trades</a></li>
               <li><Link href="/login" className="text-[13px] text-[#9CA3AF] no-underline transition-colors hover:text-emerald-400">Sign In</Link></li>
             </ul>
           </div>
