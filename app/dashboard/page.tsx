@@ -382,6 +382,31 @@ function DashboardInner() {
           </div>
         </div>
 
+        {/* Welcome Card — first-time users */}
+        {totalEstimates === 0 && (
+          <div className="mt-8 animate-fade-in-up delay-150">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 border border-emerald-500/20 p-6 sm:p-8">
+              <div className="relative z-10">
+                <h2 className="text-lg font-bold text-white sm:text-xl">
+                  You&apos;re all set up!
+                </h2>
+                <p className="mt-2 max-w-md text-sm text-slate-400">
+                  Create your first estimate and send it to a customer. It only takes a minute.
+                </p>
+                <Link
+                  href="/estimate"
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-500/30"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Your First Estimate
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Convert Error Banner */}
         {convertError && (
           <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">

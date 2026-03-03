@@ -50,8 +50,7 @@ export default function OnboardingPage() {
         return;
       }
 
-      const data = await res.json();
-      router.push(`/estimate?sample=${encodeURIComponent(data.tradeType)}`);
+      router.push("/dashboard");
     } catch {
       setError("Something went wrong. Please try again.");
       setSaving(false);
@@ -89,12 +88,7 @@ export default function OnboardingPage() {
         </div>
 
         <div className="mt-8 rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] p-6">
-          {/* Step indicator */}
-          <div className="flex items-center gap-2 mb-1">
-            <div className="h-1.5 flex-1 rounded-full bg-emerald-500" />
-            <div className="h-1.5 flex-1 rounded-full bg-white/[0.08]" />
-          </div>
-          <p className="text-xs text-slate-500 mb-5">Step 1 of 2: Tell us about your business</p>
+          <p className="text-xs text-slate-500 mb-5">Tell us about your business</p>
 
           {error && (
             <div className="mb-4 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
