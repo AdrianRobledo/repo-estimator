@@ -78,6 +78,7 @@ function EstimatePageInner() {
   ]);
 
   const [nextId, setNextId] = useState(2);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const clientDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -791,12 +792,44 @@ function EstimatePageInner() {
         {/* Job Date */}
         <div className="mt-3">
           <label className="text-xs font-medium text-slate-500">Job Date (optional)</label>
-          <input
-            type="date"
-            value={jobDate}
-            onChange={(e) => setJobDate(e.target.value)}
-            className="mt-1 block w-full max-w-[220px] rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 [color-scheme:dark]"
-          />
+          <div className="mt-1 flex items-center gap-2 max-w-[280px]">
+            <input
+              type="text"
+              readOnly
+              value={jobDate ? new Date(jobDate + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : ""}
+              onClick={() => setShowDatePicker(true)}
+              placeholder="No date selected"
+              className="block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 cursor-pointer"
+            />
+            {jobDate && (
+              <button
+                type="button"
+                onClick={() => setJobDate("")}
+                className="shrink-0 text-slate-500 transition-colors hover:text-white"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+          {showDatePicker && (
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="date"
+                value={jobDate}
+                onChange={(e) => setJobDate(e.target.value)}
+                className="block w-full max-w-[220px] rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 [color-scheme:dark]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowDatePicker(false)}
+                className="shrink-0 rounded-xl bg-white/[0.06] border border-white/[0.1] px-3 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-white/[0.1]"
+              >
+                Done
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Saved badge */}
