@@ -199,7 +199,7 @@ export default async function Home() {
           <h2 className="text-center text-xs font-semibold uppercase tracking-widest text-slate-500">
             Built for Contractors Like You
           </h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-5">
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-5">
             {[
               { trade: "Plumbing", icon: "M4 20v-8a4 4 0 014-4h0a4 4 0 014 4v4a4 4 0 004 4h0a4 4 0 004-4V4", tagline: "Send professional plumbing estimates from your truck in 60 seconds", example: "Kitchen faucet replacement", price: "$350" },
               { trade: "Electrical", icon: "M13 10V3L4 14h7v7l9-11h-7z", tagline: "Quote panel upgrades and rewiring jobs on the spot", example: "Outdoor lighting install", price: "$475" },

@@ -320,7 +320,7 @@ function DashboardInner() {
         </div>
 
         {/* Stats Bar */}
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-5 animate-fade-in-up delay-100">
+        <div className="mt-8 grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3 animate-fade-in-up delay-100">
           {/* Total Estimates */}
           <div className="flex flex-col rounded-xl border border-white/[0.08] border-l-2 border-l-white/20 bg-gradient-to-r from-white/[0.05] to-white/[0.02] p-4">
             <div className="flex items-center gap-1.5">
@@ -415,7 +415,7 @@ function DashboardInner() {
         )}
 
         {/* Quick Actions */}
-        <div className="mt-8 grid gap-3 sm:grid-cols-3 animate-fade-in-up delay-200">
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 animate-fade-in-up delay-200">
           {/* New Estimate */}
           <Link
             href="/estimate"
@@ -500,8 +500,9 @@ function DashboardInner() {
                       : "border border-transparent"
                   }`}
                 >
-                  <span className={`text-[10px] font-medium ${isToday ? "text-white" : isPast ? "text-slate-600" : "text-slate-500"}`}>
-                    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}
+                  <span className={`text-[11px] font-medium ${isToday ? "text-white" : isPast ? "text-slate-600" : "text-slate-500"}`}>
+                    <span className="sm:hidden">{["M", "T", "W", "T", "F", "S", "S"][i]}</span>
+                    <span className="hidden sm:inline">{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}</span>
                   </span>
                   <span className={`text-xs font-semibold ${isToday ? "text-white" : isPast ? "text-slate-600" : "text-slate-300"}`}>
                     {day.getDate()}
@@ -530,7 +531,7 @@ function DashboardInner() {
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusDot[job.status] || "bg-slate-400"}`} />
-                      <span className="text-[11px] text-slate-500 shrink-0 w-[90px]">{dayLabel}</span>
+                      <span className="text-[11px] text-slate-500 shrink-0 w-[70px] sm:w-[90px]">{dayLabel}</span>
                       <span className="truncate text-sm text-white">{job.customer.name || "Unnamed Customer"}</span>
                     </div>
                     <span className="shrink-0 text-sm font-semibold text-white">${job.total.toFixed(2)}</span>

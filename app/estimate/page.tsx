@@ -906,7 +906,7 @@ function EstimatePageInner() {
               placeholder="Address"
               className={inputClass}
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <input
                 type="tel"
                 inputMode="tel"
@@ -1029,38 +1029,40 @@ function EstimatePageInner() {
           <span className="text-xl font-bold text-white">${total.toFixed(2)}</span>
         </div>
 
-        {/* Action Buttons — 3 in a row */}
-        <div className="mt-4 grid grid-cols-3 gap-3">
-          <button
-            type="button"
-            onClick={handleSaveDraft}
-            disabled={saving || (!!savedId && !editId)}
-            className="rounded-xl bg-white/[0.06] py-3 text-sm font-medium text-slate-400 transition-all duration-200 hover:bg-white/[0.1] hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {saving && !showSendModal && (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white" />
-            )}
-            {editId ? "Save Changes" : "Save Draft"}
-          </button>
-          <button
-            type="button"
-            onClick={generatePDF}
-            disabled={saving}
-            className="rounded-xl bg-white/[0.06] border border-white/[0.1] py-3 text-sm font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            Download PDF
-          </button>
+        {/* Action Buttons */}
+        <div className="mt-4 space-y-2">
           <button
             type="button"
             onClick={handleSend}
             disabled={saving}
-            className="rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {saving && (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white" />
             )}
             Send to Customer
           </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              disabled={saving || (!!savedId && !editId)}
+              className="rounded-xl bg-white/[0.06] py-3 text-sm font-medium text-slate-400 transition-all duration-200 hover:bg-white/[0.1] hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {saving && !showSendModal && (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white" />
+              )}
+              {editId ? "Save Changes" : "Save Draft"}
+            </button>
+            <button
+              type="button"
+              onClick={generatePDF}
+              disabled={saving}
+              className="rounded-xl bg-white/[0.06] border border-white/[0.1] py-3 text-sm font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.1] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              Download PDF
+            </button>
+          </div>
         </div>
 
         {/* Error Banner */}
