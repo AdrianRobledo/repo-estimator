@@ -33,6 +33,7 @@ export async function GET() {
       },
       items: safeParseJSON(inv.items, []),
       total: inv.total,
+      jobTitle: inv.jobTitle || undefined,
       profile: {
         businessName: inv.user.businessName || "",
         ownerName: inv.user.ownerName || "",
@@ -84,6 +85,7 @@ export async function POST(req: Request) {
       customerEmail: estimate.customerEmail,
       items: estimate.items,
       total: estimate.total,
+      jobTitle: estimate.jobTitle,
       estimateId: estimate.id,
       userId,
     },

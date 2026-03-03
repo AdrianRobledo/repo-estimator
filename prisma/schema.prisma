@@ -83,6 +83,7 @@ model Estimate {
   notes          String?
   total          Float   @default(0)
   jobDate        String?
+  jobTitle       String?
 
   userId  String
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -107,6 +108,7 @@ model Invoice {
   customerEmail   String?
   items           String
   total           Float   @default(0)
+  jobTitle        String?
 
   estimateId      String  @unique
   estimate        Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)

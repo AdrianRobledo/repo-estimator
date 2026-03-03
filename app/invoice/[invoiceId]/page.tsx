@@ -68,6 +68,10 @@ export default function ViewInvoicePage() {
 
     doc.setFont("helvetica", "bold"); doc.setFontSize(28); doc.setTextColor(navy.r, navy.g, navy.b);
     doc.text("INVOICE", margin, y + 4);
+    if (inv.jobTitle) {
+      doc.setFont("helvetica", "normal"); doc.setFontSize(13); doc.setTextColor(slate.r, slate.g, slate.b);
+      doc.text(inv.jobTitle, margin, y + 22);
+    }
     doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(slate.r, slate.g, slate.b);
     doc.text("Invoice No.", pw - margin - 120, y - 8);
     doc.setFont("helvetica", "bold"); doc.setTextColor(dark.r, dark.g, dark.b);
@@ -78,6 +82,7 @@ export default function ViewInvoicePage() {
     doc.setTextColor(slate.r, slate.g, slate.b); doc.text("Due Date", pw - margin - 120, y + 20);
     doc.setTextColor(dark.r, dark.g, dark.b); doc.text(formatDisplayDate(inv.dueDate), pw - margin, y + 20, { align: "right" });
     y += 40;
+    if (inv.jobTitle) y += 18;
 
     // Bill To box
     doc.setFillColor(grayBg.r, grayBg.g, grayBg.b); doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b); doc.setLineWidth(0.75);
@@ -216,9 +221,14 @@ export default function ViewInvoicePage() {
           {/* INVOICE title row */}
           <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 sm:px-8">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                INVOICE
-              </h1>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                  INVOICE
+                </h1>
+                {invoice.jobTitle && (
+                  <p className="text-sm text-gray-600">{invoice.jobTitle}</p>
+                )}
+              </div>
               <div className="text-right">
                 <p className="text-sm text-gray-500">{invoice.invoiceNumber}</p>
                 <p className="text-sm text-gray-500">{invoice.date}</p>

@@ -158,6 +158,10 @@ export default function EstimateDetailPage() {
 
     doc.setFont("helvetica", "bold"); doc.setFontSize(28); doc.setTextColor(navy.r, navy.g, navy.b);
     doc.text("ESTIMATE", margin, y + 4);
+    if (est.jobTitle) {
+      doc.setFont("helvetica", "normal"); doc.setFontSize(13); doc.setTextColor(slate.r, slate.g, slate.b);
+      doc.text(est.jobTitle, margin, y + 22);
+    }
     doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(slate.r, slate.g, slate.b);
     doc.text("Estimate No.", pw - margin - 120, y - 8);
     doc.setFont("helvetica", "bold"); doc.setTextColor(dark.r, dark.g, dark.b);
@@ -172,6 +176,7 @@ export default function EstimateDetailPage() {
       doc.text(jd.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), pw - margin, y + 20, { align: "right" });
     }
     y += 40;
+    if (est.jobTitle) y += 18;
 
     doc.setFillColor(grayBg.r, grayBg.g, grayBg.b); doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b); doc.setLineWidth(0.75);
     const boxH = 80; doc.roundedRect(margin, y, cw, boxH, 6, 6, "FD");
@@ -290,6 +295,9 @@ export default function EstimateDetailPage() {
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </span>
         </div>
+        {estimate.jobTitle && (
+          <p className="mt-1 text-sm text-slate-400">{estimate.jobTitle}</p>
+        )}
         <p className="mt-1 text-sm text-slate-500">
           {estimate.estimateNumber} &middot; {formatDate(estimate.date)}
         </p>

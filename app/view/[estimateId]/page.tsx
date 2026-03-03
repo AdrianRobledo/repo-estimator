@@ -85,6 +85,10 @@ export default function ViewEstimatePage() {
 
     doc.setFont("helvetica", "bold"); doc.setFontSize(28); doc.setTextColor(navy.r, navy.g, navy.b);
     doc.text("ESTIMATE", margin, y + 4);
+    if (est.jobTitle) {
+      doc.setFont("helvetica", "normal"); doc.setFontSize(13); doc.setTextColor(slate.r, slate.g, slate.b);
+      doc.text(est.jobTitle, margin, y + 22);
+    }
     doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(slate.r, slate.g, slate.b);
     doc.text("Estimate No.", pw - margin - 120, y - 8);
     doc.setFont("helvetica", "bold"); doc.setTextColor(dark.r, dark.g, dark.b);
@@ -93,6 +97,7 @@ export default function ViewEstimatePage() {
     doc.text("Date", pw - margin - 120, y + 6);
     doc.setTextColor(dark.r, dark.g, dark.b); doc.text(est.date, pw - margin, y + 6, { align: "right" });
     y += 40;
+    if (est.jobTitle) y += 18;
 
     doc.setFillColor(grayBg.r, grayBg.g, grayBg.b); doc.setDrawColor(grayLine.r, grayLine.g, grayLine.b); doc.setLineWidth(0.75);
     const boxH = 80; doc.roundedRect(margin, y, cw, boxH, 6, 6, "FD");
@@ -226,9 +231,14 @@ export default function ViewEstimatePage() {
           {/* ESTIMATE title row */}
           <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 sm:px-8">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                ESTIMATE
-              </h1>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                  ESTIMATE
+                </h1>
+                {estimate.jobTitle && (
+                  <p className="text-sm text-gray-600">{estimate.jobTitle}</p>
+                )}
+              </div>
               <div className="text-right">
                 <p className="text-sm text-gray-500">
                   {estimate.estimateNumber}

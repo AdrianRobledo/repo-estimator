@@ -22,6 +22,7 @@ export async function GET(
     estimateNumber: est.estimateNumber,
     date: est.date,
     jobDate: est.jobDate || undefined,
+    jobTitle: est.jobTitle || undefined,
     status: est.status,
     customer: {
       name: est.customerName || "",

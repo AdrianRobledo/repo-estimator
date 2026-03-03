@@ -33,6 +33,7 @@ export async function GET(
     },
     items: safeParseJSON(inv.items, []),
     total: inv.total,
+    jobTitle: inv.jobTitle || undefined,
     profile: {
       businessName: inv.user.businessName || "",
       ownerName: inv.user.ownerName || "",

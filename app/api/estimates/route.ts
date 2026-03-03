@@ -28,6 +28,7 @@ export async function GET() {
       estimateNumber: est.estimateNumber,
       date: est.date,
       jobDate: est.jobDate || undefined,
+      jobTitle: est.jobTitle || undefined,
       status: est.status,
       customer: {
         name: est.customerName || "",
@@ -69,13 +70,14 @@ export async function POST(req: Request) {
     }
   }
 
-  const { estimateNumber, date, jobDate, customer, items, total, notes, status: reqStatus } = await req.json();
+  const { estimateNumber, date, jobDate, jobTitle, customer, items, total, notes, status: reqStatus } = await req.json();
 
   const estimate = await prisma.estimate.create({
     data: {
       estimateNumber,
       date,
       jobDate: jobDate || null,
+      jobTitle: jobTitle || null,
       status: reqStatus === "draft" ? "draft" : "sent",
       customerName: customer?.name || null,
       customerAddress: customer?.address || null,

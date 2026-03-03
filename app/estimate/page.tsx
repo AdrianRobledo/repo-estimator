@@ -34,7 +34,6 @@ function EstimatePageInner() {
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
   const [estimateNumber, setEstimateNumber] = useState("");
   const [date, setDate] = useState("");
-  const [templates, setTemplates] = useState<TemplateData[]>([]);
   const [clients, setClients] = useState<ClientData[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [clientSearch, setClientSearch] = useState("");
@@ -49,6 +48,7 @@ function EstimatePageInner() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const [usage, setUsage] = useState<{ plan: string; estimatesUsed: number; estimateLimit: number | null } | null>(null);
+  const [jobTitle, setJobTitle] = useState("");
   const [jobDate, setJobDate] = useState("");
   const [nameError, setNameError] = useState(false);
   const [emailError, setEmailError] = useState(false);
@@ -79,7 +79,6 @@ function EstimatePageInner() {
 
   const [nextId, setNextId] = useState(2);
   const clientDropdownRef = useRef<HTMLDivElement>(null);
-  const templateSelectRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -98,9 +97,6 @@ function EstimatePageInner() {
     fetch("/api/usage")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data && !data.error) setUsage(data); });
-    fetch("/api/templates")
-      .then((r) => r.ok ? r.json() : [])
-      .then((data) => { if (Array.isArray(data)) setTemplates(data); });
     fetch("/api/clients")
       .then((r) => r.ok ? r.json() : [])
       .then((data) => { if (Array.isArray(data)) setClients(data); });
@@ -134,6 +130,7 @@ function EstimatePageInner() {
             setCustomer(data.customer);
             setNotes(data.notes || "");
             if (data.jobDate) setJobDate(data.jobDate);
+            if (data.jobTitle) setJobTitle(data.jobTitle);
             const loaded = data.items.map((item: LineItem, i: number) => ({ ...item, id: i + 1 }));
             setItems(loaded);
             setNextId(loaded.length + 1);
@@ -159,6 +156,7 @@ function EstimatePageInner() {
     const loaded = data.items.map((item: LineItem, i: number) => ({ ...item, id: i + 1 }));
     setItems(loaded);
     setNextId(loaded.length + 1);
+    if (data.jobTitle) setJobTitle(data.jobTitle);
     if (data.clientMessage) {
       setNotes(data.clientMessage);
     }
@@ -168,13 +166,6 @@ function EstimatePageInner() {
         return base ? `${base}\n\n${data.disclaimer}` : data.disclaimer!;
       });
     }
-  }
-
-  function handleTemplateSelect(templateId: string) {
-    if (!templateId) return;
-    const t = templates.find((t) => t.id === templateId);
-    if (!t) return;
-    applyTemplateData(t);
   }
 
   function handleCustomerChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -240,6 +231,7 @@ function EstimatePageInner() {
         body: JSON.stringify({
           name: templateName.trim(),
           items: items.map(({ description, quantity, price }) => ({ description, quantity, price })),
+          jobTitle: jobTitle || undefined,
           clientMessage: notes || undefined,
         }),
       });
@@ -247,9 +239,6 @@ function EstimatePageInner() {
         setTemplateSaved(true);
         setShowSaveTemplate(false);
         setTemplateName("");
-        // Refresh templates list
-        const updated = await fetch("/api/templates").then((r) => r.ok ? r.json() : []);
-        if (Array.isArray(updated)) setTemplates(updated);
         setTimeout(() => setTemplateSaved(false), 3000);
       }
     } catch {
@@ -267,7 +256,7 @@ function EstimatePageInner() {
       const res = await fetch(`/api/estimates/${editId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estimateNumber, date, jobDate: jobDate || undefined, customer, items, total, notes: notes || undefined, status }),
+        body: JSON.stringify({ estimateNumber, date, jobDate: jobDate || undefined, jobTitle: jobTitle || undefined, customer, items, total, notes: notes || undefined, status }),
       });
       if (!res.ok) return null;
       return editId;
@@ -288,7 +277,7 @@ function EstimatePageInner() {
     const res = await fetch("/api/estimates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ estimateNumber, date, jobDate: jobDate || undefined, customer, items, total, notes: notes || undefined, status }),
+      body: JSON.stringify({ estimateNumber, date, jobDate: jobDate || undefined, jobTitle: jobTitle || undefined, customer, items, total, notes: notes || undefined, status }),
     });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -428,6 +417,13 @@ function EstimatePageInner() {
       doc.setTextColor(navy.r, navy.g, navy.b);
       doc.text("ESTIMATE", m, y);
 
+      if (jobTitle) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(13);
+        doc.setTextColor(slate.r, slate.g, slate.b);
+        doc.text(jobTitle, m, y + 18);
+      }
+
       // Right side: number + date (labels further left to avoid overlap)
       const metaLabelX = pw - m - 190;
       doc.setFont("helvetica", "normal");
@@ -454,6 +450,7 @@ function EstimatePageInner() {
       }
 
       y += jobDate ? 48 : 36;
+      if (jobTitle) y += 18;
 
       // ===== PREPARED FOR BOX =====
       // Calculate dynamic box height based on content
@@ -676,8 +673,6 @@ function EstimatePageInner() {
   }
 
   const inputClass = "block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10";
-  const selectChevron = `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`;
-
   return (
     <AppShell>
       <div className="mx-auto max-w-[800px] px-4 py-8">
@@ -770,31 +765,7 @@ function EstimatePageInner() {
           </div>
         )}
 
-        {/* Title Row: heading + template dropdown */}
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-white">{editId ? "Edit Estimate" : "New Estimate"}</h1>
-          {templates.length > 0 && (
-            <select
-              ref={templateSelectRef}
-              defaultValue=""
-              onChange={(e) => {
-                handleTemplateSelect(e.target.value);
-                e.target.value = "";
-              }}
-              className="rounded-lg bg-white/[0.05] border border-white/[0.1] px-3 py-1.5 text-xs text-slate-400 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 appearance-none"
-              style={{ backgroundImage: selectChevron, backgroundPosition: 'right 0.4rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em 1.2em', paddingRight: '2rem' }}
-            >
-              <option value="" disabled className="bg-[#0A0A0F] text-slate-500">
-                Use Template...
-              </option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id} className="bg-[#0A0A0F] text-white">
-                  {t.name}{t.jobTitle ? ` — ${t.jobTitle}` : ""}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+        <h1 className="text-2xl font-bold text-white">{editId ? "Edit Estimate" : "New Estimate"}</h1>
         <div className="mt-1 flex items-center gap-4 text-sm text-slate-500">
           <span>{estimateNumber}</span>
           <span>{date}</span>
@@ -803,6 +774,18 @@ function EstimatePageInner() {
               {usage.estimatesUsed} of {usage.estimateLimit} estimates used
             </span>
           )}
+        </div>
+
+        {/* Job Title */}
+        <div className="mt-3">
+          <label className="text-xs font-medium text-slate-500">Job Title (optional)</label>
+          <input
+            type="text"
+            value={jobTitle}
+            onChange={(e) => setJobTitle(e.target.value)}
+            placeholder="e.g. Backyard Patio, Kitchen Remodel..."
+            className="mt-1 block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
+          />
         </div>
 
         {/* Job Date */}

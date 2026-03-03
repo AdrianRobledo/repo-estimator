@@ -32,6 +32,7 @@ export async function GET(
     estimateNumber: est.estimateNumber,
     date: est.date,
     jobDate: est.jobDate || undefined,
+    jobTitle: est.jobTitle || undefined,
     status: est.status,
     customer: {
       name: est.customerName || "",
@@ -76,6 +77,7 @@ export async function PUT(
       ...(body.items && { items: JSON.stringify(body.items) }),
       ...(body.total !== undefined && { total: body.total }),
       ...(body.jobDate !== undefined && { jobDate: body.jobDate || null }),
+      ...(body.jobTitle !== undefined && { jobTitle: body.jobTitle || null }),
       ...(body.notes !== undefined && { notes: body.notes || null }),
       ...(body.estimateNumber && { estimateNumber: body.estimateNumber }),
       ...(body.date && { date: body.date }),

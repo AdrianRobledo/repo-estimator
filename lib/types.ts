@@ -26,6 +26,7 @@ export interface EstimateData {
   estimateNumber: string;
   date: string;
   jobDate?: string;
+  jobTitle?: string;
   status: string;
   customer: Customer;
   items: LineItem[];
@@ -44,6 +45,7 @@ export interface InvoiceData {
   date: string;
   dueDate: string;
   status: "unpaid" | "paid";
+  jobTitle?: string;
   customer: Customer;
   items: LineItem[];
   total: number;
