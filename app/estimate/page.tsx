@@ -791,20 +791,22 @@ function EstimatePageInner() {
         {/* Job Date */}
         <div className="mt-3">
           <label className="text-xs font-medium text-slate-500">Job Date (optional)</label>
-          <div className="mt-1 flex items-center gap-2">
+          <div className="mt-1 relative max-w-[220px]">
             <input
               type="date"
               value={jobDate}
               onChange={(e) => setJobDate(e.target.value)}
-              className="block w-full max-w-[220px] rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 [color-scheme:dark]"
+              className="block w-full rounded-xl bg-white/[0.05] border border-white/[0.1] px-3 py-2.5 pr-9 text-sm text-white placeholder:text-slate-500 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 [color-scheme:dark]"
             />
             {jobDate && (
               <button
                 type="button"
                 onClick={() => setJobDate("")}
-                className="shrink-0 text-xs text-red-400/70 transition-colors hover:text-red-400"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/[0.1] p-1 text-slate-400 transition-colors hover:bg-white/[0.2] hover:text-white"
               >
-                Clear
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             )}
           </div>
