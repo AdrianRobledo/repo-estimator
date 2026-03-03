@@ -57,6 +57,7 @@ export default async function Home() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-lg font-bold text-white sm:text-xl">Mike&apos;s Plumbing</p>
+                    <p className="mt-0.5 text-sm text-slate-400">Kitchen Plumbing &amp; Disposal</p>
                     <p className="mt-0.5 text-xs text-slate-500">EST-260225-847 &middot; February 25, 2026</p>
                   </div>
                   <span className="shrink-0 rounded-lg bg-amber-500/15 border border-amber-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-amber-400">
